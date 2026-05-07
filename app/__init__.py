@@ -11,8 +11,9 @@ def create_app():
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(Config)
 
-    from app.routes import bp as api_bp
+    from app.routes import bp as api_bp, paginas as paginas_bp
 
     app.register_blueprint(api_bp)
+    app.register_blueprint(paginas_bp)
 
     return app
