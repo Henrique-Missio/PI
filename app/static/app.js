@@ -1,45 +1,62 @@
 const COLUNAS = {
-  professores: [
+  aparelhos: [
     { chave: "id", titulo: "ID" },
     { chave: "nome", titulo: "Nome" },
-    { chave: "email", titulo: "E-mail" },
+    { chave: "marca", titulo: "Marca" },
+    { chave: "status", titulo: "Status" },
+    { chave: "quantidade", titulo: "Quantidade" },
+    { chave: "data_entrada", titulo: "Data de Entrada" },
+    { chave: "data_saida", titulo: "Data de Saída" },
+    { chave: "problema", titulo: "Problema" },
   ],
-  turmas: [
+  pecas: [
     { chave: "id", titulo: "ID" },
-    { chave: "codigo", titulo: "Código" },
     { chave: "nome", titulo: "Nome" },
-    { chave: "professor_id", titulo: "Professor" },
+    { chave: "marca", titulo: "Marca" },
+    { chave: "status", titulo: "Status" },
+    { chave: "quantidade", titulo: "Quantidade" },
+    { chave: "data_entrada", titulo: "Data de Entrada" },
+    { chave: "data_saida", titulo: "Data de Saída" },
+    { chave: "problema", titulo: "Problema" },
   ],
-  alunos: [
-    { chave: "id", titulo: "ID" },
+  estoque: [
+    { chave: "categoria", titulo: "Categoria" },
     { chave: "nome", titulo: "Nome" },
-    { chave: "email", titulo: "E-mail" },
-    { chave: "turma_id", titulo: "Turma" },
+    { chave: "marca", titulo: "Marca" },
+    { chave: "status", titulo: "Status" },
+    { chave: "quantidade", titulo: "Quantidade" },
+    { chave: "data_entrada", titulo: "Data de Entrada" },
+    { chave: "data_saida", titulo: "Data de Saída" },
   ],
 };
 
 const TITULOS = {
-  professores: { lista: "Professores", form: "Novo professor" },
-  turmas: { lista: "Turmas", form: "Nova turma" },
-  alunos: { lista: "Alunos", form: "Novo aluno" },
+  aparelhos: { lista: "Aparelhos", form: "Novo item" },
+  pecas: { lista: "Peças", form: "Novo item" },
+  estoque: { lista: "Estoque Geral", form: "Novo item" },
 };
 
-const CAMPOS = {
-  professores: [
-    { nome: "nome", rotulo: "Nome", obrigatorio: true },
-    { nome: "email", rotulo: "E-mail", tipo: "email" },
-  ],
-  turmas: [
-    { nome: "nome", rotulo: "Nome", obrigatorio: true },
-    { nome: "codigo", rotulo: "Código", obrigatorio: true },
-    { nome: "professor_id", rotulo: "Professor", tipo: "select", origem: "professores", obrigatorio: true },
-  ],
-  alunos: [
-    { nome: "nome", rotulo: "Nome", obrigatorio: true },
-    { nome: "email", rotulo: "E-mail", tipo: "email" },
-    { nome: "turma_id", rotulo: "Turma", tipo: "select", origem: "turmas", obrigatorio: true },
-  ],
-};
+const CAMPOS_APARELHO = [
+  { nome: "nome", rotulo: "Nome", obrigatorio: true },
+  { nome: "marca", rotulo: "Marca", obrigatorio: true },
+  { nome: "informacoes", rotulo: "Informações", obrigatorio: true },
+  { nome: "problema", rotulo: "Problema", obrigatorio: true },
+  { nome: "status", rotulo: "Status", obrigatorio: true },
+  { nome: "quantidade", rotulo: "Quantidade", obrigatorio: true, tipo: "number" },
+  { nome: "data_entrada", rotulo: "Data de Entrada", tipo: "date" },
+  { nome: "data_saida", rotulo: "Data de Saída", tipo: "date" },
+];
+
+const CAMPOS_PECA = [
+  { nome: "nome", rotulo: "Nome", obrigatorio: true },
+  { nome: "marca", rotulo: "Marca", obrigatorio: true },
+  { nome: "informacoes", rotulo: "Informações", obrigatorio: true },
+  { nome: "problema", rotulo: "Problema" },
+  { nome: "status", rotulo: "Status", obrigatorio: true },
+  { nome: "quantidade", rotulo: "Quantidade", obrigatorio: true, tipo: "number" },
+  { nome: "data_entrada", rotulo: "Data de Entrada", tipo: "date" },
+  { nome: "data_saida", rotulo: "Data de Saída", tipo: "date" },
+];
 
 const elementoStatus = document.getElementById("status");
 const elementoTituloLista = document.getElementById("titulo-lista");
@@ -52,7 +69,8 @@ const mensagemFormulario = document.getElementById("mensagem-formulario");
 const botaoRecarregar = document.getElementById("botao-recarregar");
 const abas = document.querySelectorAll(".aba");
 
-let tipoAtual = "professores";
+let tipoAtual = "aparelhos";
+let categoriaAtual = ""; // controla qual tabela o form cadastra
 
 async function buscar(tipo) {
   const resposta = await fetch(`/api/${tipo}`);
@@ -63,13 +81,18 @@ async function buscar(tipo) {
 async function carregar(tipo) {
   tipoAtual = tipo;
   elementoTituloLista.textContent = TITULOS[tipo].lista;
-  elementoTituloFormulario.textContent = TITULOS[tipo].form;
   limparMensagem();
 
-  await renderizarFormulario(tipo);
+  // estoque não tem formulário de cadastro
+  const painelForm = document.getElementById("painel-formulario");
+  painelForm.style.display = tipo === "estoque" ? "none" : "block";
+
+  if (tipo !== "estoque") {
+    await renderizarFormulario();
+  }
+
   renderizarCabecalho(tipo);
   elementoCorpo.innerHTML = "";
-
   elementoStatus.classList.remove("erro");
   elementoStatus.textContent = "Carregando...";
 
@@ -103,22 +126,65 @@ function renderizarLinhas(tipo, dados) {
     elementoCorpo.appendChild(tr);
     return;
   }
-
   for (const item of dados) {
     const tr = document.createElement("tr");
     for (const coluna of COLUNAS[tipo]) {
       const td = document.createElement("td");
       const valor = item[coluna.chave];
-      td.textContent = valor === null || valor === undefined ? "—" : valor;
+      if (coluna.chave === "categoria" && valor) {
+        td.textContent = valor.charAt(0).toUpperCase() + valor.slice(1);
+      } else {
+        td.textContent = valor === null || valor === undefined ? "—" : valor;
+      }
       tr.appendChild(td);
     }
     elementoCorpo.appendChild(tr);
   }
 }
 
-async function renderizarFormulario(tipo) {
+async function renderizarFormulario() {
   elementoCampos.innerHTML = "";
-  for (const campo of CAMPOS[tipo]) {
+
+  // seletor de categoria no topo do formulário
+  const wrapperCategoria = document.createElement("div");
+  wrapperCategoria.className = "campo";
+  const labelCategoria = document.createElement("label");
+  labelCategoria.textContent = "Categoria *";
+  const selectCategoria = document.createElement("select");
+  selectCategoria.id = "campo-categoria";
+  selectCategoria.name = "categoria";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Selecione...";
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  selectCategoria.appendChild(placeholder);
+
+  ["aparelho", "peca"].forEach(op => {
+    const option = document.createElement("option");
+    option.value = op;
+    option.textContent = op === "aparelho" ? "Aparelho" : "Peça";
+    if (op === categoriaAtual) option.selected = true;
+    selectCategoria.appendChild(option);
+  });
+
+  // quando muda a categoria, re-renderiza os campos
+  selectCategoria.addEventListener("change", async () => {
+    if (selectCategoria.value) {
+      categoriaAtual = selectCategoria.value;
+      await renderizarFormulario();
+    }
+  });
+
+  wrapperCategoria.appendChild(labelCategoria);
+  wrapperCategoria.appendChild(selectCategoria);
+  elementoCampos.appendChild(wrapperCategoria);
+
+  // campos de acordo com a categoria selecionada
+  const campos = categoriaAtual === "aparelho" ? CAMPOS_APARELHO : CAMPOS_PECA;
+
+  for (const campo of campos) {
     const wrapper = document.createElement("div");
     wrapper.className = "campo";
 
@@ -127,50 +193,21 @@ async function renderizarFormulario(tipo) {
     label.textContent = campo.rotulo + (campo.obrigatorio ? " *" : "");
     wrapper.appendChild(label);
 
-    if (campo.tipo === "select") {
-      const select = document.createElement("select");
-      select.id = `campo-${campo.nome}`;
-      select.name = campo.nome;
-      if (campo.obrigatorio) select.required = true;
-
-      const placeholder = document.createElement("option");
-      placeholder.value = "";
-      placeholder.textContent = "Selecione...";
-      select.appendChild(placeholder);
-
-      try {
-        const itens = await buscar(campo.origem);
-        for (const item of itens) {
-          const option = document.createElement("option");
-          option.value = item.id;
-          option.textContent = rotuloItem(campo.origem, item);
-          select.appendChild(option);
-        }
-      } catch (erro) {
-        const option = document.createElement("option");
-        option.disabled = true;
-        option.textContent = `Erro ao carregar: ${erro.message}`;
-        select.appendChild(option);
-      }
-
-      wrapper.appendChild(select);
-    } else {
-      const input = document.createElement("input");
-      input.type = campo.tipo || "text";
-      input.id = `campo-${campo.nome}`;
-      input.name = campo.nome;
-      if (campo.obrigatorio) input.required = true;
-      wrapper.appendChild(input);
+    const input = document.createElement("input");
+    input.type = campo.tipo || "text";
+    input.id = `campo-${campo.nome}`;
+    input.name = campo.nome;
+    if (campo.obrigatorio) input.required = true;
+    if (campo.nome === "data_entrada") {
+      input.value = new Date().toISOString().split("T")[0];
     }
 
+    wrapper.appendChild(input);
     elementoCampos.appendChild(wrapper);
   }
-}
 
-function rotuloItem(origem, item) {
-  if (origem === "professores") return `${item.nome} (id ${item.id})`;
-  if (origem === "turmas") return `${item.codigo} - ${item.nome}`;
-  return `${item.id}`;
+  elementoTituloFormulario.textContent =
+    categoriaAtual === "aparelho" ? "Novo aparelho" : "Nova peça";
 }
 
 function limparMensagem() {
@@ -182,36 +219,52 @@ async function enviarFormulario(evento) {
   evento.preventDefault();
   limparMensagem();
 
+  const campos = categoriaAtual === "aparelho" ? CAMPOS_APARELHO : CAMPOS_PECA;
   const dados = {};
-  for (const campo of CAMPOS[tipoAtual]) {
+
+  for (const campo of campos) {
     const elemento = formulario.elements[campo.nome];
+    if (!elemento) continue;
     const valor = elemento.value.trim();
+
     if (campo.obrigatorio && !valor) {
-      mensagemFormulario.textContent = `Preencha ${campo.rotulo}.`;
+      mensagemFormulario.textContent = `Preencha o campo "${campo.rotulo}".`;
       mensagemFormulario.classList.add("erro");
       elemento.focus();
       return;
     }
-    if (valor !== "") dados[campo.nome] = valor;
+
+    if (valor !== "") {
+      if (campo.tipo === "number") {
+        dados[campo.nome] = Number(valor);
+      } else if (campo.tipo === "date") {
+        const [ano, mes, dia] = valor.split("-");
+        dados[campo.nome] = `${dia}-${mes}-${ano}`;
+      } else {
+        dados[campo.nome] = valor;
+      }
+    }
   }
+
+  // envia para a rota correta dependendo da categoria
+  const rota = categoriaAtual === "aparelho" ? "aparelhos" : "pecas";
 
   const botao = formulario.querySelector("button[type=submit]");
   botao.disabled = true;
   try {
-    const resposta = await fetch(`/api/${tipoAtual}`, {
+    const resposta = await fetch(`/api/${rota}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(dados),
     });
 
     const corpo = await resposta.json().catch(() => ({}));
-    if (!resposta.ok) {
-      throw new Error(corpo.erro || `HTTP ${resposta.status}`);
-    }
+    if (!resposta.ok) throw new Error(corpo.erro || `HTTP ${resposta.status}`);
 
     mensagemFormulario.textContent = "Cadastrado com sucesso.";
     mensagemFormulario.classList.add("sucesso");
     formulario.reset();
+    await renderizarFormulario();
     await carregar(tipoAtual);
   } catch (erro) {
     mensagemFormulario.textContent = erro.message;
@@ -232,4 +285,4 @@ abas.forEach((aba) => {
 botaoRecarregar.addEventListener("click", () => carregar(tipoAtual));
 formulario.addEventListener("submit", enviarFormulario);
 
-carregar("professores");
+carregar("aparelhos");

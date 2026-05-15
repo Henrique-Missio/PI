@@ -2,11 +2,9 @@
 Script didático: DDL (create/drop tables) + DML (inserts) com sessão explícita.
 Execute na raiz do projeto: python setup_database.py
 """
-
 from sqlalchemy import select
-
-from database import Base, SessionLocal, engine
-import models  # noqa: F401 — registra tabelas no metadata
+from app.database import Base, SessionLocal, engine
+from app import models
 
 
 def populate_database():
@@ -15,72 +13,9 @@ def populate_database():
     Base.metadata.create_all(bind=engine)
 
     session = SessionLocal()
-
     try:
-        print("Inserindo professores...")
-        professores = [
-            models.Professor(nome="Maria Silva", email="maria@escola.example"),
-            models.Professor(nome="João Santos", email="joao.santos@escola.example"),
-        ]
-        session.add_all(professores)
-        session.flush()
-
-        print("Inserindo turmas...")
-        turmas = [
-            models.Turma(
-                nome="Matemática A",
-                codigo="MAT-2026-A",
-                professor_id=professores[0].id,
-            ),
-            models.Turma(
-                nome="Física B",
-                codigo="FIS-2026-B",
-                professor_id=professores[0].id,
-            ),
-            models.Turma(
-                nome="Português A",
-                codigo="PORT-2026-A",
-                professor_id=professores[1].id,
-            ),
-        ]
-        session.add_all(turmas)
-        session.flush()
-
-        print("Inserindo alunos...")
-        alunos = [
-            models.Aluno(
-                nome="Ana Costa",
-                email="ana@escola.example",
-                turma_id=turmas[0].id,
-            ),
-            models.Aluno(
-                nome="Bruno Lima",
-                email="bruno@escola.example",
-                turma_id=turmas[0].id,
-            ),
-            models.Aluno(
-                nome="Carla Dias",
-                email="carla@escola.example",
-                turma_id=turmas[1].id,
-            ),
-            models.Aluno(
-                nome="Diego Rocha",
-                email="diego@escola.example",
-                turma_id=turmas[2].id,
-            ),
-        ]
-        session.add_all(alunos)
-
+        print("Tabelas criadas com sucesso.")
         session.commit()
-        print("\nSucesso! Commit concluído.")
-
-        np = len(session.scalars(select(models.Professor)).all())
-        nt = len(session.scalars(select(models.Turma)).all())
-        na = len(session.scalars(select(models.Aluno)).all())
-        print(f"- Professores: {np}")
-        print(f"- Turmas: {nt}")
-        print(f"- Alunos: {na}")
-
     except Exception as e:
         print(f"Ocorreu um erro: {e}")
         session.rollback()

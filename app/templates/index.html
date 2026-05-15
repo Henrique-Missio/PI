@@ -1,26 +1,28 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Escola - Painel</title>
+  <title>Pids Tech - Painel</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
+
 <body>
   <header class="topo">
-    <h1>Escola</h1>
+    <h1>Pids Tech</h1>
     <p class="subtitulo">Consumindo a API <code>/api/...</code></p>
   </header>
 
   <nav class="abas">
-    <button class="aba ativa" data-tipo="professores">Professores</button>
-    <button class="aba" data-tipo="turmas">Turmas</button>
-    <button class="aba" data-tipo="alunos">Alunos</button>
+    <button class="aba ativa" data-tipo="aparelhos">Aparelhos</button>
+    <button class="aba" data-tipo="pecas">Peças</button>
+    <button class="aba" data-tipo="estoque">Estoque</button>
   </nav>
 
   <main class="conteudo">
     <section id="painel-formulario">
-      <h2 id="titulo-formulario">Novo professor</h2>
+      <h2 id="titulo-formulario">Novo aparelho</h2>
       <form id="formulario" novalidate>
         <div id="campos" class="grade-campos"></div>
         <div class="acoes-formulario">
@@ -32,12 +34,14 @@
 
     <section id="painel-tabela">
       <div class="cabecalho-painel">
-        <h2 id="titulo-lista">Professores</h2>
+        <h2 id="titulo-lista">Aparelhos</h2>
         <button id="botao-recarregar" type="button">Recarregar</button>
       </div>
       <div id="status" class="status"></div>
       <table id="tabela">
-        <thead><tr id="cabecalho"></tr></thead>
+        <thead>
+          <tr id="cabecalho"></tr>
+        </thead>
         <tbody id="corpo"></tbody>
       </table>
     </section>
@@ -45,4 +49,5 @@
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
+
 </html>
