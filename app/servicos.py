@@ -1,7 +1,8 @@
 from datetime import date
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import select
 from app.database import SessionLocal
-from app.models import Pecas, Estoque, Aparelhos
+from app.models import Pecas, Estoque, Aparelhos, Pessoa, Pessoa_fisica, Endereco, Email, Telefone
 
 
 def _texto_obrigatorio(valor, campo):
@@ -25,6 +26,137 @@ def _converter_data(valor, campo):
         return date(*(int(x) for x in reversed(str(valor).strip().split("-"))))
     except ValueError:
         raise ValueError(f"O campo '{campo}' deve estar no formato DD-MM-AAAA.")
+
+
+# ──────────────────────────────────────────
+# AUTENTICAÇÃO
+# ──────────────────────────────────────────
+
+def login(dados):
+    email = _texto_obrigatorio(dados.get("email"), "email")
+    senha = _texto_obrigatorio(dados.get("senha"), "senha")
+
+    session = SessionLocal()
+    try:
+        # busca o email na tabela Email
+        email_obj = session.scalars(
+            select(Email).where(Email.email_pessoal == email)
+        ).first()
+
+        if email_obj is None:
+            raise ValueError("E-mail ou senha incorretos.")
+
+        pessoa = session.get(Pessoa, email_obj.id_pessoa)
+
+        if pessoa is None or not check_password_hash(pessoa.senha, senha):
+            raise ValueError("E-mail ou senha incorretos.")
+
+        return {
+            "id":            pessoa.id,
+            "nome_completo": pessoa.nome_completo,
+            "tipo":          pessoa.tipo,
+            "funcao":        pessoa.funcao,
+        }
+    finally:
+        session.close()
+
+
+def cadastrar_usuario(dados, tipo="voluntario"):
+    nome_completo    = _texto_obrigatorio(dados.get("nome_completo"),    "nome_completo")
+    cpf              = _texto_obrigatorio(dados.get("cpf"),              "cpf")
+    funcao           = _texto_obrigatorio(dados.get("funcao"),           "funcao")
+    email_pessoal    = _texto_obrigatorio(dados.get("email_pessoal"),    "email_pessoal")
+    telefone_celular = _texto_obrigatorio(dados.get("telefone_celular"), "telefone_celular")
+    cep              = _texto_obrigatorio(dados.get("cep"),              "cep")
+    rua              = _texto_obrigatorio(dados.get("rua"),              "rua")
+    bairro           = _texto_obrigatorio(dados.get("bairro"),           "bairro")
+    cidade           = _texto_obrigatorio(dados.get("cidade"),           "cidade")
+    estado           = _texto_obrigatorio(dados.get("estado"),           "estado")
+    senha            = _texto_obrigatorio(dados.get("senha"),            "senha")
+    data_nasc        = _converter_data(dados.get("data_nasc"),           "data_nasc")
+
+    # validações
+    if not cpf.isdigit() or len(cpf) != 11:
+        raise ValueError("CPF inválido. Use apenas 11 números.")
+    if not telefone_celular.isdigit() or len(telefone_celular) not in [10, 11]:
+        raise ValueError("Telefone inválido. Use apenas números com DDD.")
+    if not cep.isdigit() or len(cep) != 8:
+        raise ValueError("CEP inválido. Use apenas 8 números.")
+    if len(senha) < 6:
+        raise ValueError("A senha deve ter pelo menos 6 caracteres.")
+    if tipo not in ["administrador", "voluntario"]:
+        raise ValueError("Tipo inválido.")
+
+    session = SessionLocal()
+    try:
+        # verifica se email já existe
+        email_existente = session.scalars(
+            select(Email).where(Email.email_pessoal == email_pessoal)
+        ).first()
+        if email_existente:
+            raise ValueError("Este e-mail já está cadastrado.")
+
+        # verifica se CPF já existe
+        cpf_existente = session.scalars(
+            select(Pessoa_fisica).where(Pessoa_fisica.cpf == cpf)
+        ).first()
+        if cpf_existente:
+            raise ValueError("Este CPF já está cadastrado.")
+
+        # cria pessoa
+        pessoa = Pessoa(
+            tipo=tipo,
+            nome_completo=nome_completo,
+            senha=generate_password_hash(senha),
+            funcao=funcao,
+            data_nasc=data_nasc,
+        )
+        session.add(pessoa)
+        session.flush()
+
+        # cria registros relacionados
+        session.add(Pessoa_fisica(cpf=cpf, id_pessoa=pessoa.id))
+        session.add(Email(email_pessoal=email_pessoal, id_pessoa=pessoa.id))
+        session.add(Telefone(telefone_celular=telefone_celular, id_pessoa=pessoa.id))
+        session.add(Endereco(
+            cep=cep, rua=rua, bairro=bairro,
+            cidade=cidade, estado=estado,
+            id_pessoa=pessoa.id
+        ))
+
+        session.commit()
+        session.refresh(pessoa)
+        return pessoa.to_dict()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def listar_usuarios():
+    session = SessionLocal()
+    try:
+        linhas = session.scalars(select(Pessoa).order_by(Pessoa.id)).all()
+        return [p.to_dict() for p in linhas]
+    finally:
+        session.close()
+
+
+def excluir_usuario(pessoa_id):
+    session = SessionLocal()
+    try:
+        pessoa = session.get(Pessoa, pessoa_id)
+        if pessoa is None:
+            raise ValueError(f"Usuário com id {pessoa_id} não encontrado.")
+        session.delete(pessoa)
+        session.commit()
+        return {"mensagem": f"Usuário {pessoa_id} excluído com sucesso."}
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 # ──────────────────────────────────────────
@@ -52,30 +184,24 @@ def buscar_aparelho_por_id(aparelho_id):
 
 
 def cadastrar_aparelho(dados):
-    nome        = _texto_obrigatorio(dados.get("nome"),        "nome")
-    marca       = _texto_obrigatorio(dados.get("marca"),       "marca")
-    informacoes = _texto_obrigatorio(dados.get("informacoes"), "informacoes")
-    problema    = _texto_obrigatorio(dados.get("problema"),    "problema")
-    status      = _texto_obrigatorio(dados.get("status"),      "status")
+    nome         = _texto_obrigatorio(dados.get("nome"),        "nome")
+    marca        = _texto_obrigatorio(dados.get("marca"),       "marca")
+    informacoes  = _texto_obrigatorio(dados.get("informacoes"), "informacoes")
+    problema     = _texto_obrigatorio(dados.get("problema"),    "problema")
+    status       = _texto_obrigatorio(dados.get("status"),      "status")
     data_entrada = _converter_data(dados["data_entrada"], "data_entrada") if dados.get("data_entrada") else date.today()
-    data_saida   = _converter_data(dados["data_saida"], "data_saida") if dados.get("data_saida") else None
-
-    try:
-        quantidade = int(dados.get("quantidade"))
-    except (TypeError, ValueError):
-        raise ValueError("O campo 'quantidade' deve ser um número inteiro.")
+    data_saida   = _converter_data(dados["data_saida"],   "data_saida")   if dados.get("data_saida")   else None
 
     session = SessionLocal()
     try:
         aparelho = Aparelhos(
             nome=nome, marca=marca, informacoes=informacoes,
             problema=problema, status=status,
-            quantidade=quantidade, data_entrada=data_entrada, data_saida=data_saida
+            data_entrada=data_entrada, data_saida=data_saida
         )
         session.add(aparelho)
-        session.flush()  # gera o id do aparelho antes de criar o estoque
+        session.flush()
 
-        # cria entrada no estoque automaticamente
         estoque = Estoque(categoria="aparelho", id_aparelho=aparelho.id)
         session.add(estoque)
 
@@ -103,11 +229,6 @@ def editar_aparelho(aparelho_id, dados):
         if "status"      in dados: aparelho.status      = _texto_obrigatorio(dados["status"],      "status")
         if "data_entrada"in dados: aparelho.data_entrada= _converter_data(dados["data_entrada"],   "data_entrada")
         if "data_saida"  in dados: aparelho.data_saida  = _converter_data(dados["data_saida"],     "data_saida") if dados["data_saida"] else None
-        if "quantidade"  in dados:
-            try:
-                aparelho.quantidade = int(dados["quantidade"])
-            except (TypeError, ValueError):
-                raise ValueError("O campo 'quantidade' deve ser um número inteiro.")
 
         session.commit()
         session.refresh(aparelho)
@@ -160,30 +281,24 @@ def buscar_peca_por_id(peca_id):
 
 
 def cadastrar_peca(dados):
-    nome        = _texto_obrigatorio(dados.get("nome"),        "nome")
-    marca       = _texto_obrigatorio(dados.get("marca"),       "marca")
-    informacoes = _texto_obrigatorio(dados.get("informacoes"), "informacoes")
-    problema    = _texto_opcional(dados.get("problema"))
-    status      = _texto_obrigatorio(dados.get("status"),      "status")
+    nome         = _texto_obrigatorio(dados.get("nome"),        "nome")
+    marca        = _texto_obrigatorio(dados.get("marca"),       "marca")
+    informacoes  = _texto_obrigatorio(dados.get("informacoes"), "informacoes")
+    problema     = _texto_opcional(dados.get("problema"))
+    status       = _texto_obrigatorio(dados.get("status"),      "status")
     data_entrada = _converter_data(dados["data_entrada"], "data_entrada") if dados.get("data_entrada") else date.today()
-    data_saida   = _converter_data(dados["data_saida"], "data_saida") if dados.get("data_saida") else None
-
-    try:
-        quantidade = int(dados.get("quantidade"))
-    except (TypeError, ValueError):
-        raise ValueError("O campo 'quantidade' deve ser um número inteiro.")
+    data_saida   = _converter_data(dados["data_saida"],   "data_saida")   if dados.get("data_saida")   else None
 
     session = SessionLocal()
     try:
         peca = Pecas(
             nome=nome, marca=marca, informacoes=informacoes,
             problema=problema, status=status,
-            quantidade=quantidade, data_entrada=data_entrada, data_saida=data_saida
+            data_entrada=data_entrada, data_saida=data_saida
         )
         session.add(peca)
-        session.flush()  # gera o id da peça antes de criar o estoque
+        session.flush()
 
-        # cria entrada no estoque automaticamente
         estoque = Estoque(categoria="peca", id_pecas=peca.id)
         session.add(estoque)
 
@@ -211,11 +326,6 @@ def editar_peca(peca_id, dados):
         if "status"      in dados: peca.status      = _texto_obrigatorio(dados["status"],      "status")
         if "data_entrada"in dados: peca.data_entrada= _converter_data(dados["data_entrada"],   "data_entrada")
         if "data_saida"  in dados: peca.data_saida  = _converter_data(dados["data_saida"],     "data_saida") if dados["data_saida"] else None
-        if "quantidade"  in dados:
-            try:
-                peca.quantidade = int(dados["quantidade"])
-            except (TypeError, ValueError):
-                raise ValueError("O campo 'quantidade' deve ser um número inteiro.")
 
         session.commit()
         session.refresh(peca)
@@ -244,7 +354,7 @@ def excluir_peca(peca_id):
 
 
 # ──────────────────────────────────────────
-# ESTOQUE — somente leitura, gerado automaticamente
+# ESTOQUE — somente leitura
 # ──────────────────────────────────────────
 
 def listar_estoque():

@@ -1,33 +1,219 @@
+const modal = document.getElementById("modal");
+const modalTitulo = document.getElementById("modal-titulo");
+const modalConteudo = document.getElementById("modal-conteudo");
+const modalFechar = document.getElementById("modal-fechar");
+const modalEditar = document.getElementById("modal-editar");
+const modalExcluir = document.getElementById("modal-excluir");
+let itemAtual = null;
+
+modalFechar.addEventListener("click", () => modal.style.display = "none");
+modal.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
+
+function abrirModal(item) {
+  itemAtual = item;
+  modalTitulo.textContent = `${item.nome} — ${item.marca}`;
+  modalConteudo.innerHTML = "";
+
+  const campos = [
+    { rotulo: "Categoria", chave: "categoria" },
+    { rotulo: "Status", chave: "status" },
+    { rotulo: "Informações", chave: "informacoes" },
+    { rotulo: "Problema", chave: "problema" },
+    { rotulo: "Data de Entrada", chave: "data_entrada" },
+    { rotulo: "Data de Saída", chave: "data_saida" },
+  ];
+
+  for (const campo of campos) {
+    const valor = item[campo.chave];
+    if (valor === null || valor === undefined) continue;
+
+    const linha = document.createElement("div");
+    linha.className = "modal-linha";
+
+    const rotulo = document.createElement("span");
+    rotulo.className = "modal-rotulo";
+    rotulo.textContent = campo.rotulo + ":";
+
+    const valor_el = document.createElement("span");
+    if (campo.chave === "categoria" && valor) {
+      valor_el.textContent = valor.charAt(0).toUpperCase() + valor.slice(1);
+    } else {
+      valor_el.textContent = valor || "—";
+    }
+
+    linha.appendChild(rotulo);
+    linha.appendChild(valor_el);
+    modalConteudo.appendChild(linha);
+  }
+
+  document.querySelector(".modal-acoes").style.display = "flex";
+  modal.style.display = "flex";
+
+  modalExcluir.onclick = async () => {
+    if (!itemAtual) return;
+    if (!confirm(`Excluir "${itemAtual.nome}"? Esta ação não pode ser desfeita.`)) return;
+
+    const rota = itemAtual.categoria === "aparelho"
+      ? `aparelhos/${itemAtual.id}`
+      : `pecas/${itemAtual.id}`;
+
+    try {
+      const resposta = await fetch(`/api/${rota}`, { method: "DELETE" });
+      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+      modal.style.display = "none";
+      await carregar(tipoAtual);
+    } catch (erro) {
+      alert(`Erro ao excluir: ${erro.message}`);
+    }
+  };
+
+  modalEditar.onclick = () => {
+    if (!itemAtual) return;
+    modalConteudo.innerHTML = "";
+    document.querySelector(".modal-acoes").style.display = "none";
+
+    const campos = itemAtual.categoria === "aparelho" ? CAMPOS_APARELHO : CAMPOS_PECA;
+
+    const form = document.createElement("form");
+    form.id = "form-editar";
+
+    for (const campo of campos) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "campo";
+
+      const label = document.createElement("label");
+      label.textContent = campo.rotulo + (campo.obrigatorio ? " *" : "");
+      wrapper.appendChild(label);
+
+      if (campo.tipo === "select") {
+        const select = document.createElement("select");
+        select.name = campo.nome;
+        if (campo.obrigatorio) select.required = true;
+
+        campo.opcoes.forEach(op => {
+          const option = document.createElement("option");
+          option.value = op;
+          option.textContent = op;
+          if (itemAtual[campo.nome] === op) option.selected = true;
+          select.appendChild(option);
+        });
+
+        wrapper.appendChild(select);
+      } else {
+        const input = document.createElement("input");
+        input.type = campo.tipo || "text";
+        input.name = campo.nome;
+        if (campo.obrigatorio) input.required = true;
+
+        if (campo.tipo === "date" && itemAtual[campo.nome]) {
+          const partes = itemAtual[campo.nome].split("-");
+          input.value = partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : itemAtual[campo.nome];
+        } else {
+          input.value = itemAtual[campo.nome] || "";
+        }
+
+        wrapper.appendChild(input);
+      }
+
+      form.appendChild(wrapper);
+    }
+
+    const acoes = document.createElement("div");
+    acoes.className = "modal-acoes";
+
+    const botaoSalvar = document.createElement("button");
+    botaoSalvar.textContent = "Salvar";
+    botaoSalvar.className = "botao-primario";
+    botaoSalvar.type = "button";
+
+    const botaoCancelar = document.createElement("button");
+    botaoCancelar.textContent = "Cancelar";
+    botaoCancelar.type = "button";
+    botaoCancelar.addEventListener("click", () => abrirModal(itemAtual));
+
+    acoes.appendChild(botaoSalvar);
+    acoes.appendChild(botaoCancelar);
+    form.appendChild(acoes);
+    modalConteudo.appendChild(form);
+
+    botaoSalvar.addEventListener("click", async () => {
+      const dados = {};
+      for (const campo of campos) {
+        const elemento = form.elements[campo.nome];
+        if (!elemento) continue;
+        const valor = elemento.value.trim();
+
+        if (campo.obrigatorio && !valor) {
+          alert(`Preencha o campo "${campo.rotulo}".`);
+          elemento.focus();
+          return;
+        }
+
+        if (valor !== "") {
+          if (campo.tipo === "date") {
+            const [ano, mes, dia] = valor.split("-");
+            dados[campo.nome] = `${dia}-${mes}-${ano}`;
+          } else {
+            dados[campo.nome] = valor;
+          }
+        }
+      }
+
+      const rota = itemAtual.categoria === "aparelho"
+        ? `aparelhos/${itemAtual.id}`
+        : `pecas/${itemAtual.id}`;
+
+      try {
+        const resposta = await fetch(`/api/${rota}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dados),
+        });
+
+        const corpo = await resposta.json().catch(() => ({}));
+        if (!resposta.ok) throw new Error(corpo.erro || `HTTP ${resposta.status}`);
+
+        itemAtual = { ...itemAtual, ...dados };
+        modal.style.display = "none";
+        await carregar(tipoAtual);
+      } catch (erro) {
+        alert(`Erro ao salvar: ${erro.message}`);
+      }
+    });
+  };
+}
+
 const COLUNAS = {
   aparelhos: [
     { chave: "id", titulo: "ID" },
     { chave: "nome", titulo: "Nome" },
     { chave: "marca", titulo: "Marca" },
     { chave: "status", titulo: "Status" },
-    { chave: "quantidade", titulo: "Quantidade" },
+    { chave:"informacoes", titulo:"Informações"},
+    { chave: "problema", titulo: "Problema" },
     { chave: "data_entrada", titulo: "Data de Entrada" },
     { chave: "data_saida", titulo: "Data de Saída" },
-    { chave: "problema", titulo: "Problema" },
   ],
   pecas: [
     { chave: "id", titulo: "ID" },
     { chave: "nome", titulo: "Nome" },
     { chave: "marca", titulo: "Marca" },
     { chave: "status", titulo: "Status" },
-    { chave: "quantidade", titulo: "Quantidade" },
+    { chave:"informacoes", titulo:"Informações"},
+    { chave: "problema", titulo: "Problema" },
     { chave: "data_entrada", titulo: "Data de Entrada" },
     { chave: "data_saida", titulo: "Data de Saída" },
-    { chave: "problema", titulo: "Problema" },
   ],
   estoque: [
-    { chave: "categoria", titulo: "Categoria" },
-    { chave: "nome", titulo: "Nome" },
-    { chave: "marca", titulo: "Marca" },
-    { chave: "status", titulo: "Status" },
-    { chave: "quantidade", titulo: "Quantidade" },
+    { chave: "categoria",    titulo: "Categoria" },
+    { chave: "nome",         titulo: "Nome" },
+    { chave: "marca",        titulo: "Marca" },
+    { chave: "status",       titulo: "Status" },
+    { chave: "informacoes",  titulo: "Informações" },
+    { chave: "problema",     titulo: "Problema" },
     { chave: "data_entrada", titulo: "Data de Entrada" },
-    { chave: "data_saida", titulo: "Data de Saída" },
-  ],
+    { chave: "data_saida",   titulo: "Data de Saída" },
+],
 };
 
 const TITULOS = {
@@ -41,8 +227,7 @@ const CAMPOS_APARELHO = [
   { nome: "marca", rotulo: "Marca", obrigatorio: true },
   { nome: "informacoes", rotulo: "Informações", obrigatorio: true },
   { nome: "problema", rotulo: "Problema", obrigatorio: true },
-  { nome: "status", rotulo: "Status", obrigatorio: true },
-  { nome: "quantidade", rotulo: "Quantidade", obrigatorio: true, tipo: "number" },
+  { nome: "status", rotulo: "Status", obrigatorio: true, tipo: "select", opcoes: ["Funcional", "Não funcional", "Em conserto", "Reservado", "Doado"] },
   { nome: "data_entrada", rotulo: "Data de Entrada", tipo: "date" },
   { nome: "data_saida", rotulo: "Data de Saída", tipo: "date" },
 ];
@@ -52,8 +237,7 @@ const CAMPOS_PECA = [
   { nome: "marca", rotulo: "Marca", obrigatorio: true },
   { nome: "informacoes", rotulo: "Informações", obrigatorio: true },
   { nome: "problema", rotulo: "Problema" },
-  { nome: "status", rotulo: "Status", obrigatorio: true },
-  { nome: "quantidade", rotulo: "Quantidade", obrigatorio: true, tipo: "number" },
+  { nome: "status", rotulo: "Status", obrigatorio: true, tipo: "select", opcoes: ["Funcional", "Não funcional", "Em conserto", "Reservado", "Doado"] },
   { nome: "data_entrada", rotulo: "Data de Entrada", tipo: "date" },
   { nome: "data_saida", rotulo: "Data de Saída", tipo: "date" },
 ];
@@ -83,7 +267,6 @@ async function carregar(tipo) {
   elementoTituloLista.textContent = TITULOS[tipo].lista;
   limparMensagem();
 
-  // estoque não tem formulário de cadastro
   const painelForm = document.getElementById("painel-formulario");
   painelForm.style.display = tipo === "estoque" ? "none" : "block";
 
@@ -128,6 +311,13 @@ function renderizarLinhas(tipo, dados) {
   }
   for (const item of dados) {
     const tr = document.createElement("tr");
+
+    if (tipo === "estoque") {
+      tr.style.cursor = "pointer";
+      tr.title = "Clique para ver detalhes";
+      tr.addEventListener("click", () => abrirModal(item));
+    }
+
     for (const coluna of COLUNAS[tipo]) {
       const td = document.createElement("td");
       const valor = item[coluna.chave];
@@ -145,7 +335,6 @@ function renderizarLinhas(tipo, dados) {
 async function renderizarFormulario() {
   elementoCampos.innerHTML = "";
 
-  // seletor de categoria no topo do formulário
   const wrapperCategoria = document.createElement("div");
   wrapperCategoria.className = "campo";
   const labelCategoria = document.createElement("label");
@@ -169,7 +358,6 @@ async function renderizarFormulario() {
     selectCategoria.appendChild(option);
   });
 
-  // quando muda a categoria, re-renderiza os campos
   selectCategoria.addEventListener("change", async () => {
     if (selectCategoria.value) {
       categoriaAtual = selectCategoria.value;
@@ -181,7 +369,6 @@ async function renderizarFormulario() {
   wrapperCategoria.appendChild(selectCategoria);
   elementoCampos.appendChild(wrapperCategoria);
 
-  // campos de acordo com a categoria selecionada
   const campos = categoriaAtual === "aparelho" ? CAMPOS_APARELHO : CAMPOS_PECA;
 
   for (const campo of campos) {
@@ -193,16 +380,38 @@ async function renderizarFormulario() {
     label.textContent = campo.rotulo + (campo.obrigatorio ? " *" : "");
     wrapper.appendChild(label);
 
-    const input = document.createElement("input");
-    input.type = campo.tipo || "text";
-    input.id = `campo-${campo.nome}`;
-    input.name = campo.nome;
-    if (campo.obrigatorio) input.required = true;
-    if (campo.nome === "data_entrada") {
-      input.value = new Date().toISOString().split("T")[0];
-    }
+    if (campo.tipo === "select") {
+      const select = document.createElement("select");
+      select.id = `campo-${campo.nome}`;
+      select.name = campo.nome;
+      if (campo.obrigatorio) select.required = true;
 
-    wrapper.appendChild(input);
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Selecione...";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      select.appendChild(placeholder);
+
+      campo.opcoes.forEach(op => {
+        const option = document.createElement("option");
+        option.value = op;
+        option.textContent = op;
+        select.appendChild(option);
+      });
+
+      wrapper.appendChild(select);
+    } else {
+      const input = document.createElement("input");
+      input.type = campo.tipo || "text";
+      input.id = `campo-${campo.nome}`;
+      input.name = campo.nome;
+      if (campo.obrigatorio) input.required = true;
+      if (campo.nome === "data_entrada") {
+        input.value = new Date().toISOString().split("T")[0];
+      }
+      wrapper.appendChild(input);
+    }
     elementoCampos.appendChild(wrapper);
   }
 
@@ -246,7 +455,6 @@ async function enviarFormulario(evento) {
     }
   }
 
-  // envia para a rota correta dependendo da categoria
   const rota = categoriaAtual === "aparelho" ? "aparelhos" : "pecas";
 
   const botao = formulario.querySelector("button[type=submit]");

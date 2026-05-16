@@ -12,6 +12,10 @@
   <header class="topo">
     <h1>Pids Tech</h1>
     <p class="subtitulo">Consumindo a API <code>/api/...</code></p>
+    <div class="topo-acoes">
+      <button onclick="window.location.href='/login'" class="botao-secundario">Login</button>
+      <button onclick="window.location.href='/cadastro'" class="botao-primario">Cadastro</button>
+    </div>
   </header>
 
   <nav class="abas">
@@ -46,6 +50,18 @@
       </table>
     </section>
   </main>
+
+  <div id="modal" class="modal-fundo" style="display:none">
+    <div class="modal-caixa">
+      <button id="modal-fechar">✕</button>
+      <h2 id="modal-titulo"></h2>
+      <div id="modal-conteudo"></div>
+      <div class="modal-acoes">
+        <button id="modal-editar" class="botao-primario">Editar</button>
+        <button id="modal-excluir" class="botao-excluir">Excluir</button>
+      </div>
+    </div>
+  </div>
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
