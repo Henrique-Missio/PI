@@ -1,5 +1,22 @@
 const mensagem = document.getElementById("mensagem-cadastro");
 const botaoCadastro = document.getElementById("botao-cadastro");
+const tipoWrapper = document.getElementById("campo-tipo-wrapper");
+
+let usuarioLogado = null;
+
+async function verificarLogin() {
+    try {
+        const resposta = await fetch("/api/me");
+        if (resposta.ok) {
+            usuarioLogado = await resposta.json();
+            if (usuarioLogado.tipo === "administrador") {
+                tipoWrapper.style.display = "block";
+            }
+        }
+    } catch {
+        usuarioLogado = null;
+    }
+}
 
 function mostrarErro(msg) {
     mensagem.textContent = msg;
@@ -11,16 +28,90 @@ function mostrarSucesso(msg) {
     mensagem.className = "mensagem sucesso";
 }
 
+// ── MÁSCARA CPF ──
+document.getElementById("cpf").addEventListener("input", (e) => {
+    let v = e.target.value.replace(/\D/g, "").slice(0, 11);
+    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+    v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    e.target.value = v;
+});
+
+// ── VALIDADOR CPF ──
+function validarCPF(cpf) {
+    cpf = cpf.replace(/\D/g, "");
+    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+
+    let soma = 0;
+    for (let i = 0; i < 9; i++) soma += parseInt(cpf[i]) * (10 - i);
+    let resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf[9])) return false;
+
+    soma = 0;
+    for (let i = 0; i < 10; i++) soma += parseInt(cpf[i]) * (11 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    return resto === parseInt(cpf[10]);
+}
+
+// ── MÁSCARA CEP ──
+document.getElementById("cep").addEventListener("input", (e) => {
+    let v = e.target.value.replace(/\D/g, "").slice(0, 8);
+    v = v.replace(/(\d{5})(\d)/, "$1-$2");
+    e.target.value = v;
+});
+
+// ── VIA CEP ──
+document.getElementById("cep").addEventListener("blur", async (e) => {
+    const cep = e.target.value.replace(/\D/g, "");
+    if (cep.length !== 8) return;
+
+    // limpa os campos antes de buscar
+    ["rua", "bairro", "cidade", "estado"].forEach(id => {
+        document.getElementById(id).value = "";
+    });
+
+    try {
+        const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const dados = await resposta.json();
+
+        if (dados.erro) {
+            mostrarErro("CEP não encontrado.");
+            return;
+        }
+
+        document.getElementById("rua").value = dados.logradouro || "";
+        document.getElementById("bairro").value = dados.bairro || "";
+        document.getElementById("cidade").value = dados.localidade || "";
+        document.getElementById("estado").value = dados.uf || "";
+
+        // foca no número após preencher o endereço
+        document.getElementById("numero").focus();
+    } catch {
+        mostrarErro("Erro ao buscar CEP. Verifique sua conexão.");
+    }
+});
+
+// ── MÁSCARA TELEFONE ──
+document.getElementById("telefone_celular").addEventListener("input", (e) => {
+    let v = e.target.value.replace(/\D/g, "").slice(0, 11);
+    v = v.replace(/(\d{2})(\d)/, "($1) $2");
+    v = v.replace(/(\d{5})(\d)/, "$1-$2");
+    e.target.value = v;
+});
+
+// ── ENVIO DO FORMULÁRIO ──
 botaoCadastro.addEventListener("click", async () => {
-    const campos = [
+    const camposObrigatorios = [
         "nome_completo", "cpf", "data_nasc", "funcao",
         "email_pessoal", "telefone_celular",
         "cep", "rua", "bairro", "cidade", "estado",
-        "senha", "confirmar_senha"
+        "numero", "senha", "confirmar_senha"
     ];
 
     const dados = {};
-    for (const campo of campos) {
+    for (const campo of camposObrigatorios) {
         const valor = document.getElementById(campo).value.trim();
         if (!valor) {
             mostrarErro(`Preencha o campo "${campo.replace(/_/g, " ")}".`);
@@ -29,6 +120,9 @@ botaoCadastro.addEventListener("click", async () => {
         }
         dados[campo] = valor;
     }
+
+    const complemento = document.getElementById("complemento").value.trim();
+    if (complemento) dados.complemento = complemento;
 
     if (dados.senha !== dados.confirmar_senha) {
         mostrarErro("As senhas não coincidem.");
@@ -40,29 +134,41 @@ botaoCadastro.addEventListener("click", async () => {
         return;
     }
 
-    if (dados.cpf.length !== 11 || !/^\d+$/.test(dados.cpf)) {
-        mostrarErro("CPF inválido. Use apenas 11 números.");
+    const cpfLimpo = dados.cpf.replace(/\D/g, "");
+    if (!validarCPF(cpfLimpo)) {
+        mostrarErro("CPF inválido.");
         return;
     }
+    dados.cpf = cpfLimpo;
 
-    if (dados.telefone_celular.length < 10 || !/^\d+$/.test(dados.telefone_celular)) {
+    const telLimpo = dados.telefone_celular.replace(/\D/g, "");
+    if (telLimpo.length < 10) {
         mostrarErro("Telefone inválido. Use apenas números com DDD.");
         return;
     }
+    dados.telefone_celular = telLimpo;
 
-    if (dados.cep.length !== 8 || !/^\d+$/.test(dados.cep)) {
-        mostrarErro("CEP inválido. Use apenas 8 números.");
+    const cepLimpo = dados.cep.replace(/\D/g, "");
+    if (cepLimpo.length !== 8) {
+        mostrarErro("CEP inválido.");
         return;
     }
+    dados.cep = cepLimpo;
 
     const [ano, mes, dia] = dados.data_nasc.split("-");
     dados.data_nasc = `${dia}-${mes}-${ano}`;
 
     delete dados.confirmar_senha;
 
+    let rota = "/api/cadastro";
+    if (usuarioLogado?.tipo === "administrador") {
+        dados.tipo = document.getElementById("tipo").value;
+        rota = "/api/usuarios";
+    }
+
     botaoCadastro.disabled = true;
     try {
-        const resposta = await fetch("/api/cadastro", {
+        const resposta = await fetch(rota, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(dados),
@@ -71,11 +177,15 @@ botaoCadastro.addEventListener("click", async () => {
         const corpo = await resposta.json().catch(() => ({}));
         if (!resposta.ok) throw new Error(corpo.erro || `HTTP ${resposta.status}`);
 
-        mostrarSucesso("Cadastro realizado! Redirecionando para o login...");
-        setTimeout(() => window.location.href = "/login", 2000);
+        mostrarSucesso("Cadastro realizado com sucesso! Redirecionando...");
+        setTimeout(() => {
+            window.location.href = usuarioLogado ? "/" : "/login";
+        }, 2000);
     } catch (erro) {
         mostrarErro(erro.message);
     } finally {
         botaoCadastro.disabled = false;
     }
 });
+
+verificarLogin();

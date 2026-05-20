@@ -62,20 +62,26 @@ def login(dados):
 
 
 def cadastrar_usuario(dados, tipo="voluntario"):
-    nome_completo    = _texto_obrigatorio(dados.get("nome_completo"),    "nome_completo")
-    cpf              = _texto_obrigatorio(dados.get("cpf"),              "cpf")
-    funcao           = _texto_obrigatorio(dados.get("funcao"),           "funcao")
-    email_pessoal    = _texto_obrigatorio(dados.get("email_pessoal"),    "email_pessoal")
-    telefone_celular = _texto_obrigatorio(dados.get("telefone_celular"), "telefone_celular")
-    cep              = _texto_obrigatorio(dados.get("cep"),              "cep")
-    rua              = _texto_obrigatorio(dados.get("rua"),              "rua")
-    bairro           = _texto_obrigatorio(dados.get("bairro"),           "bairro")
-    cidade           = _texto_obrigatorio(dados.get("cidade"),           "cidade")
-    estado           = _texto_obrigatorio(dados.get("estado"),           "estado")
-    senha            = _texto_obrigatorio(dados.get("senha"),            "senha")
-    data_nasc        = _converter_data(dados.get("data_nasc"),           "data_nasc")
+    nome_completo        = _texto_obrigatorio(dados.get("nome_completo"),        "nome_completo")
+    cpf                  = _texto_obrigatorio(dados.get("cpf"),                  "cpf")
+    funcao               = _texto_obrigatorio(dados.get("funcao"),               "funcao")
+    email_pessoal        = _texto_obrigatorio(dados.get("email_pessoal"),        "email_pessoal")
+    telefone_celular     = _texto_obrigatorio(dados.get("telefone_celular"),     "telefone_celular")
+    cep                  = _texto_obrigatorio(dados.get("cep"),                  "cep")
+    rua                  = _texto_obrigatorio(dados.get("rua"),                  "rua")
+    numero               = _texto_obrigatorio(dados.get("numero"),               "numero")
+    bairro               = _texto_obrigatorio(dados.get("bairro"),               "bairro")
+    cidade               = _texto_obrigatorio(dados.get("cidade"),               "cidade")
+    estado               = _texto_obrigatorio(dados.get("estado"),               "estado")
+    senha                = _texto_obrigatorio(dados.get("senha"),                "senha")
+    data_nasc            = _converter_data(dados.get("data_nasc"),               "data_nasc")
 
-    # validações
+    # campos opcionais
+    complemento          = _texto_opcional(dados.get("complemento"))
+    email_juridico       = _texto_opcional(dados.get("email_juridico"))
+    telefone_corporativo = _texto_opcional(dados.get("telefone_corporativo"))
+    telefone_fixo        = _texto_opcional(dados.get("telefone_fixo"))
+
     if not cpf.isdigit() or len(cpf) != 11:
         raise ValueError("CPF inválido. Use apenas 11 números.")
     if not telefone_celular.isdigit() or len(telefone_celular) not in [10, 11]:
@@ -89,21 +95,18 @@ def cadastrar_usuario(dados, tipo="voluntario"):
 
     session = SessionLocal()
     try:
-        # verifica se email já existe
         email_existente = session.scalars(
             select(Email).where(Email.email_pessoal == email_pessoal)
         ).first()
         if email_existente:
             raise ValueError("Este e-mail já está cadastrado.")
 
-        # verifica se CPF já existe
         cpf_existente = session.scalars(
             select(Pessoa_fisica).where(Pessoa_fisica.cpf == cpf)
         ).first()
         if cpf_existente:
             raise ValueError("Este CPF já está cadastrado.")
 
-        # cria pessoa
         pessoa = Pessoa(
             tipo=tipo,
             nome_completo=nome_completo,
@@ -114,12 +117,21 @@ def cadastrar_usuario(dados, tipo="voluntario"):
         session.add(pessoa)
         session.flush()
 
-        # cria registros relacionados
         session.add(Pessoa_fisica(cpf=cpf, id_pessoa=pessoa.id))
-        session.add(Email(email_pessoal=email_pessoal, id_pessoa=pessoa.id))
-        session.add(Telefone(telefone_celular=telefone_celular, id_pessoa=pessoa.id))
+        session.add(Email(
+            email_pessoal=email_pessoal,
+            email_juridico=email_juridico,
+            id_pessoa=pessoa.id
+        ))
+        session.add(Telefone(
+            telefone_celular=telefone_celular,
+            telefone_corporativo=telefone_corporativo,
+            telefone_fixo=telefone_fixo,
+            id_pessoa=pessoa.id
+        ))
         session.add(Endereco(
-            cep=cep, rua=rua, bairro=bairro,
+            cep=cep, rua=rua, numero=numero,
+            complemento=complemento, bairro=bairro,
             cidade=cidade, estado=estado,
             id_pessoa=pessoa.id
         ))
