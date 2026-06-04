@@ -39,6 +39,8 @@ def populate_database():
         endereco = models.Endereco(
             cep="00000000",
             rua="Rua Padrão",
+            numero="0",           
+            complemento=None,     
             bairro="Bairro Padrão",
             cidade="Porto Alegre",
             estado="RS",
