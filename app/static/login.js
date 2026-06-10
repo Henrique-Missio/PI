@@ -1,6 +1,17 @@
 const mensagem = document.getElementById("mensagem-login");
 const botaoLogin = document.getElementById("botao-login");
 
+const mensagemCadastro = sessionStorage.getItem("mensagem-cadastro");
+if (mensagemCadastro) {
+    mensagem.textContent = mensagemCadastro;
+    mensagem.className = "mensagem sucesso";
+    sessionStorage.removeItem("mensagem-cadastro");
+    setTimeout(() => {
+        mensagem.textContent = "";
+        mensagem.className = "mensagem";
+    }, 3000);
+}
+
 function mostrarErro(msg) {
     mensagem.textContent = msg;
     mensagem.className = "mensagem erro";
@@ -26,6 +37,7 @@ botaoLogin.addEventListener("click", async () => {
         const corpo = await resposta.json().catch(() => ({}));
         if (!resposta.ok) throw new Error(corpo.erro || `HTTP ${resposta.status}`);
 
+        sessionStorage.setItem("mensagem-login", "Login realizado com sucesso!");
         window.location.href = "/";
     } catch (erro) {
         mostrarErro(erro.message);

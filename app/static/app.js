@@ -5,6 +5,18 @@ const modalFechar = document.getElementById("modal-fechar");
 const modalEditar = document.getElementById("modal-editar");
 const modalExcluir = document.getElementById("modal-excluir");
 let itemAtual = null;
+let usuarioAtual = null;
+
+const mensagemLogin = sessionStorage.getItem("mensagem-login");
+if (mensagemLogin) {
+  const aviso = document.createElement("div");
+  aviso.className = "mensagem sucesso mensagem-topo";
+  aviso.textContent = mensagemLogin;
+  document.body.insertBefore(aviso, document.body.firstChild);
+  sessionStorage.removeItem("mensagem-login");
+
+  setTimeout(() => aviso.remove(), 3000);
+}
 
 modalFechar.addEventListener("click", () => modal.style.display = "none");
 modal.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
@@ -51,6 +63,19 @@ function abrirModal(item) {
 
   modalExcluir.onclick = async () => {
     if (!itemAtual) return;
+
+    if (!usuarioAtual) {
+      const conteudo = document.getElementById("modal-conteudo");
+      if (!conteudo.querySelector(".aviso-login")) {
+        const aviso = document.createElement("p");
+        aviso.className = "mensagem erro aviso-login";
+        aviso.textContent = "Você precisa estar logado para excluir.";
+        conteudo.appendChild(aviso);
+        setTimeout(() => aviso.remove(), 3000);
+      }
+      return;
+    }
+
     if (!confirm(`Excluir "${itemAtual.nome}"? Esta ação não pode ser desfeita.`)) return;
 
     const rota = itemAtual.categoria === "aparelho"
@@ -189,7 +214,7 @@ const COLUNAS = {
     { chave: "nome", titulo: "Nome" },
     { chave: "marca", titulo: "Marca" },
     { chave: "status", titulo: "Status" },
-    { chave:"informacoes", titulo:"Informações"},
+    { chave: "informacoes", titulo: "Informações" },
     { chave: "problema", titulo: "Problema" },
     { chave: "data_entrada", titulo: "Data de Entrada" },
     { chave: "data_saida", titulo: "Data de Saída" },
@@ -199,21 +224,21 @@ const COLUNAS = {
     { chave: "nome", titulo: "Nome" },
     { chave: "marca", titulo: "Marca" },
     { chave: "status", titulo: "Status" },
-    { chave:"informacoes", titulo:"Informações"},
+    { chave: "informacoes", titulo: "Informações" },
     { chave: "problema", titulo: "Problema" },
     { chave: "data_entrada", titulo: "Data de Entrada" },
     { chave: "data_saida", titulo: "Data de Saída" },
   ],
   estoque: [
-    { chave: "categoria",    titulo: "Categoria" },
-    { chave: "nome",         titulo: "Nome" },
-    { chave: "marca",        titulo: "Marca" },
-    { chave: "status",       titulo: "Status" },
-    { chave: "informacoes",  titulo: "Informações" },
-    { chave: "problema",     titulo: "Problema" },
+    { chave: "categoria", titulo: "Categoria" },
+    { chave: "nome", titulo: "Nome" },
+    { chave: "marca", titulo: "Marca" },
+    { chave: "status", titulo: "Status" },
+    { chave: "informacoes", titulo: "Informações" },
+    { chave: "problema", titulo: "Problema" },
     { chave: "data_entrada", titulo: "Data de Entrada" },
-    { chave: "data_saida",   titulo: "Data de Saída" },
-],
+    { chave: "data_saida", titulo: "Data de Saída" },
+  ],
 };
 
 const TITULOS = {
@@ -269,6 +294,7 @@ async function carregar(tipo) {
 
   const painelForm = document.getElementById("painel-formulario");
   painelForm.style.display = tipo === "estoque" ? "none" : "block";
+  categoriaAtual = tipo === "pecas" ? "peca" : tipo === "aparelhos" ? "aparelho" : "";
 
   if (tipo !== "estoque") {
     await renderizarFormulario();
@@ -493,4 +519,20 @@ abas.forEach((aba) => {
 botaoRecarregar.addEventListener("click", () => carregar(tipoAtual));
 formulario.addEventListener("submit", enviarFormulario);
 
+carregar("aparelhos");
+
+async function verificarSessao() {
+  try {
+    const resposta = await fetch("/api/me");
+    if (resposta.ok) {
+      usuarioAtual = await resposta.json();
+    } else {
+      usuarioAtual = null;
+    }
+  } catch {
+    usuarioAtual = null;
+  }
+}
+
+verificarSessao();
 carregar("aparelhos");

@@ -177,10 +177,8 @@ botaoCadastro.addEventListener("click", async () => {
         const corpo = await resposta.json().catch(() => ({}));
         if (!resposta.ok) throw new Error(corpo.erro || `HTTP ${resposta.status}`);
 
-        mostrarSucesso("Cadastro realizado com sucesso! Redirecionando...");
-        setTimeout(() => {
-            window.location.href = usuarioLogado ? "/" : "/login";
-        }, 2000);
+        sessionStorage.setItem("mensagem-cadastro", "Cadastro realizado com sucesso!");
+        window.location.href = usuarioLogado ? "/" : "/login";
     } catch (erro) {
         mostrarErro(erro.message);
     } finally {
