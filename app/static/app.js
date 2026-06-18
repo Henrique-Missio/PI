@@ -58,24 +58,12 @@ function abrirModal(item) {
     modalConteudo.appendChild(linha);
   }
 
+  modalExcluir.style.display = (usuarioAtual && usuarioAtual.tipo === "administrador") ? "inline-block" : "none";
   document.querySelector(".modal-acoes").style.display = "flex";
   modal.style.display = "flex";
 
   modalExcluir.onclick = async () => {
     if (!itemAtual) return;
-
-    if (!usuarioAtual) {
-      const conteudo = document.getElementById("modal-conteudo");
-      if (!conteudo.querySelector(".aviso-login")) {
-        const aviso = document.createElement("p");
-        aviso.className = "mensagem erro aviso-login";
-        aviso.textContent = "Você precisa estar logado para excluir.";
-        conteudo.appendChild(aviso);
-        setTimeout(() => aviso.remove(), 3000);
-      }
-      return;
-    }
-
     if (!confirm(`Excluir "${itemAtual.nome}"? Esta ação não pode ser desfeita.`)) return;
 
     const rota = itemAtual.categoria === "aparelho"
@@ -92,120 +80,120 @@ function abrirModal(item) {
     }
   };
 
-  modalEditar.onclick = () => {
-    if (!itemAtual) return;
-    modalConteudo.innerHTML = "";
-    document.querySelector(".modal-acoes").style.display = "none";
+modalEditar.onclick = () => {
+  if (!itemAtual) return;
+  modalConteudo.innerHTML = "";
+  document.querySelector(".modal-acoes").style.display = "none";
 
-    const campos = itemAtual.categoria === "aparelho" ? CAMPOS_APARELHO : CAMPOS_PECA;
+  const campos = itemAtual.categoria === "aparelho" ? CAMPOS_APARELHO : CAMPOS_PECA;
 
-    const form = document.createElement("form");
-    form.id = "form-editar";
+  const form = document.createElement("form");
+  form.id = "form-editar";
 
-    for (const campo of campos) {
-      const wrapper = document.createElement("div");
-      wrapper.className = "campo";
+  for (const campo of campos) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "campo";
 
-      const label = document.createElement("label");
-      label.textContent = campo.rotulo + (campo.obrigatorio ? " *" : "");
-      wrapper.appendChild(label);
+    const label = document.createElement("label");
+    label.textContent = campo.rotulo + (campo.obrigatorio ? " *" : "");
+    wrapper.appendChild(label);
 
-      if (campo.tipo === "select") {
-        const select = document.createElement("select");
-        select.name = campo.nome;
-        if (campo.obrigatorio) select.required = true;
+    if (campo.tipo === "select") {
+      const select = document.createElement("select");
+      select.name = campo.nome;
+      if (campo.obrigatorio) select.required = true;
 
-        campo.opcoes.forEach(op => {
-          const option = document.createElement("option");
-          option.value = op;
-          option.textContent = op;
-          if (itemAtual[campo.nome] === op) option.selected = true;
-          select.appendChild(option);
-        });
+      campo.opcoes.forEach(op => {
+        const option = document.createElement("option");
+        option.value = op;
+        option.textContent = op;
+        if (itemAtual[campo.nome] === op) option.selected = true;
+        select.appendChild(option);
+      });
 
-        wrapper.appendChild(select);
+      wrapper.appendChild(select);
+    } else {
+      const input = document.createElement("input");
+      input.type = campo.tipo || "text";
+      input.name = campo.nome;
+      if (campo.obrigatorio) input.required = true;
+
+      if (campo.tipo === "date" && itemAtual[campo.nome]) {
+        const partes = itemAtual[campo.nome].split("-");
+        input.value = partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : itemAtual[campo.nome];
       } else {
-        const input = document.createElement("input");
-        input.type = campo.tipo || "text";
-        input.name = campo.nome;
-        if (campo.obrigatorio) input.required = true;
-
-        if (campo.tipo === "date" && itemAtual[campo.nome]) {
-          const partes = itemAtual[campo.nome].split("-");
-          input.value = partes.length === 3 ? `${partes[2]}-${partes[1]}-${partes[0]}` : itemAtual[campo.nome];
-        } else {
-          input.value = itemAtual[campo.nome] || "";
-        }
-
-        wrapper.appendChild(input);
+        input.value = itemAtual[campo.nome] || "";
       }
 
-      form.appendChild(wrapper);
+      wrapper.appendChild(input);
     }
 
-    const acoes = document.createElement("div");
-    acoes.className = "modal-acoes";
+    form.appendChild(wrapper);
+  }
 
-    const botaoSalvar = document.createElement("button");
-    botaoSalvar.textContent = "Salvar";
-    botaoSalvar.className = "botao-primario";
-    botaoSalvar.type = "button";
+  const acoes = document.createElement("div");
+  acoes.className = "modal-acoes";
 
-    const botaoCancelar = document.createElement("button");
-    botaoCancelar.textContent = "Cancelar";
-    botaoCancelar.type = "button";
-    botaoCancelar.addEventListener("click", () => abrirModal(itemAtual));
+  const botaoSalvar = document.createElement("button");
+  botaoSalvar.textContent = "Salvar";
+  botaoSalvar.className = "botao-primario";
+  botaoSalvar.type = "button";
 
-    acoes.appendChild(botaoSalvar);
-    acoes.appendChild(botaoCancelar);
-    form.appendChild(acoes);
-    modalConteudo.appendChild(form);
+  const botaoCancelar = document.createElement("button");
+  botaoCancelar.textContent = "Cancelar";
+  botaoCancelar.type = "button";
+  botaoCancelar.addEventListener("click", () => abrirModal(itemAtual));
 
-    botaoSalvar.addEventListener("click", async () => {
-      const dados = {};
-      for (const campo of campos) {
-        const elemento = form.elements[campo.nome];
-        if (!elemento) continue;
-        const valor = elemento.value.trim();
+  acoes.appendChild(botaoSalvar);
+  acoes.appendChild(botaoCancelar);
+  form.appendChild(acoes);
+  modalConteudo.appendChild(form);
 
-        if (campo.obrigatorio && !valor) {
-          alert(`Preencha o campo "${campo.rotulo}".`);
-          elemento.focus();
-          return;
-        }
+  botaoSalvar.addEventListener("click", async () => {
+    const dados = {};
+    for (const campo of campos) {
+      const elemento = form.elements[campo.nome];
+      if (!elemento) continue;
+      const valor = elemento.value.trim();
 
-        if (valor !== "") {
-          if (campo.tipo === "date") {
-            const [ano, mes, dia] = valor.split("-");
-            dados[campo.nome] = `${dia}-${mes}-${ano}`;
-          } else {
-            dados[campo.nome] = valor;
-          }
-        }
+      if (campo.obrigatorio && !valor) {
+        alert(`Preencha o campo "${campo.rotulo}".`);
+        elemento.focus();
+        return;
       }
 
-      const rota = itemAtual.categoria === "aparelho"
-        ? `aparelhos/${itemAtual.id}`
-        : `pecas/${itemAtual.id}`;
-
-      try {
-        const resposta = await fetch(`/api/${rota}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dados),
-        });
-
-        const corpo = await resposta.json().catch(() => ({}));
-        if (!resposta.ok) throw new Error(corpo.erro || `HTTP ${resposta.status}`);
-
-        itemAtual = { ...itemAtual, ...dados };
-        modal.style.display = "none";
-        await carregar(tipoAtual);
-      } catch (erro) {
-        alert(`Erro ao salvar: ${erro.message}`);
+      if (valor !== "") {
+        if (campo.tipo === "date") {
+          const [ano, mes, dia] = valor.split("-");
+          dados[campo.nome] = `${dia}-${mes}-${ano}`;
+        } else {
+          dados[campo.nome] = valor;
+        }
       }
-    });
-  };
+    }
+
+    const rota = itemAtual.categoria === "aparelho"
+      ? `aparelhos/${itemAtual.id}`
+      : `pecas/${itemAtual.id}`;
+
+    try {
+      const resposta = await fetch(`/api/${rota}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados),
+      });
+
+      const corpo = await resposta.json().catch(() => ({}));
+      if (!resposta.ok) throw new Error(corpo.erro || `HTTP ${resposta.status}`);
+
+      itemAtual = { ...itemAtual, ...dados };
+      modal.style.display = "none";
+      await carregar(tipoAtual);
+    } catch (erro) {
+      alert(`Erro ao salvar: ${erro.message}`);
+    }
+  });
+};
 }
 
 const COLUNAS = {
@@ -524,15 +512,53 @@ carregar("aparelhos");
 async function verificarSessao() {
   try {
     const resposta = await fetch("/api/me");
-    if (resposta.ok) {
-      usuarioAtual = await resposta.json();
-    } else {
-      usuarioAtual = null;
-    }
+    usuarioAtual = resposta.ok ? await resposta.json() : null;
   } catch {
     usuarioAtual = null;
   }
+  renderizarAreaAuth();
 }
 
 verificarSessao();
 carregar("aparelhos");
+
+function renderizarAreaAuth() {
+  const area = document.getElementById("area-auth");
+  area.innerHTML = "";
+
+  if (usuarioAtual) {
+    const nome = document.createElement("span");
+    nome.textContent = `Olá, ${usuarioAtual.nome_completo}`;
+    nome.style.marginRight = "0.5rem";
+
+    const botaoPerfil = document.createElement("button");
+    botaoPerfil.textContent = "Perfil";
+    botaoPerfil.className = "botao-secundario";
+    botaoPerfil.onclick = () => window.location.href = "/perfil";
+
+    const botaoSair = document.createElement("button");
+    botaoSair.textContent = "Sair";
+    botaoSair.className = "botao-secundario";
+    botaoSair.onclick = async () => {
+      await fetch("/api/logout", { method: "POST" });
+      window.location.reload();
+    };
+
+    area.appendChild(nome);
+    area.appendChild(botaoPerfil);
+    area.appendChild(botaoSair);
+  } else {
+    const botaoLogin = document.createElement("button");
+    botaoLogin.textContent = "Login";
+    botaoLogin.className = "botao-secundario";
+    botaoLogin.onclick = () => window.location.href = "/login";
+
+    const botaoCadastro = document.createElement("button");
+    botaoCadastro.textContent = "Cadastro";
+    botaoCadastro.className = "botao-primario";
+    botaoCadastro.onclick = () => window.location.href = "/cadastro";
+
+    area.appendChild(botaoLogin);
+    area.appendChild(botaoCadastro);
+  }
+}

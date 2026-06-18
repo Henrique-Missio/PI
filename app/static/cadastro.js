@@ -62,35 +62,42 @@ document.getElementById("cep").addEventListener("input", (e) => {
     e.target.value = v;
 });
 
-// ── VIA CEP ──
-document.getElementById("cep").addEventListener("blur", async (e) => {
-    const cep = e.target.value.replace(/\D/g, "");
-    if (cep.length !== 8) return;
+// ── VIA CEP ──────────────────────────────────────────────────────────────
+// Função extraída e exportável, para ser testável isoladamente com Jest.
+async function buscarEnderecoPorCep(cep, { fetchFn = fetch, doc = document } = {}) {
+    const cepLimpo = cep.replace(/\D/g, "");
+    if (cepLimpo.length !== 8) return null;
 
     // limpa os campos antes de buscar
     ["rua", "bairro", "cidade", "estado"].forEach(id => {
-        document.getElementById(id).value = "";
+        doc.getElementById(id).value = "";
     });
 
     try {
-        const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const resposta = await fetchFn(`https://viacep.com.br/ws/${cepLimpo}/json/`);
         const dados = await resposta.json();
 
         if (dados.erro) {
             mostrarErro("CEP não encontrado.");
-            return;
+            return null;
         }
 
-        document.getElementById("rua").value = dados.logradouro || "";
-        document.getElementById("bairro").value = dados.bairro || "";
-        document.getElementById("cidade").value = dados.localidade || "";
-        document.getElementById("estado").value = dados.uf || "";
+        doc.getElementById("rua").value = dados.logradouro || "";
+        doc.getElementById("bairro").value = dados.bairro || "";
+        doc.getElementById("cidade").value = dados.localidade || "";
+        doc.getElementById("estado").value = dados.uf || "";
 
-        // foca no número após preencher o endereço
-        document.getElementById("numero").focus();
+        doc.getElementById("numero").focus();
+
+        return dados;
     } catch {
         mostrarErro("Erro ao buscar CEP. Verifique sua conexão.");
+        return null;
     }
+}
+
+document.getElementById("cep").addEventListener("blur", async (e) => {
+    await buscarEnderecoPorCep(e.target.value);
 });
 
 // ── MÁSCARA TELEFONE ──
@@ -187,3 +194,8 @@ botaoCadastro.addEventListener("click", async () => {
 });
 
 verificarLogin();
+
+// Exporta para uso em testes (Jest) sem afetar a execução no navegador
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { buscarEnderecoPorCep, validarCPF };
+}

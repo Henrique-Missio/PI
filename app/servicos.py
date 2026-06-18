@@ -387,6 +387,147 @@ def buscar_estoque_por_id(estoque_id):
         return estoque.to_dict()
     finally:
         session.close()
+
+# ──────────────────────────────────────────
+# PERFIL — somente leitura
+# ──────────────────────────────────────────
+        
+def buscar_perfil(pessoa_id):
+    session = SessionLocal()
+    try:
+        pessoa = session.get(Pessoa, pessoa_id)
+        if pessoa is None:
+            raise ValueError(f"Usuário com id {pessoa_id} não encontrado.")
+
+        dados = pessoa.to_dict()
+
+        pessoa_fisica = session.scalars(
+            select(Pessoa_fisica).where(Pessoa_fisica.id_pessoa == pessoa_id)
+        ).first()
+        dados["cpf"] = pessoa_fisica.cpf if pessoa_fisica else None
+
+        email = session.scalars(
+            select(Email).where(Email.id_pessoa == pessoa_id)
+        ).first()
+        dados["email_pessoal"]  = email.email_pessoal  if email else None
+        dados["email_juridico"] = email.email_juridico if email else None
+
+        telefone = session.scalars(
+            select(Telefone).where(Telefone.id_pessoa == pessoa_id)
+        ).first()
+        dados["telefone_celular"]     = telefone.telefone_celular     if telefone else None
+        dados["telefone_corporativo"] = telefone.telefone_corporativo if telefone else None
+        dados["telefone_fixo"]        = telefone.telefone_fixo        if telefone else None
+
+        endereco = session.scalars(
+            select(Endereco).where(Endereco.id_pessoa == pessoa_id)
+        ).first()
+        if endereco:
+            dados["cep"]         = endereco.cep
+            dados["rua"]         = endereco.rua
+            dados["numero"]      = endereco.numero
+            dados["complemento"] = endereco.complemento
+            dados["bairro"]      = endereco.bairro
+            dados["cidade"]      = endereco.cidade
+            dados["estado"]      = endereco.estado
+
+        return dados
+    finally:
+        session.close()
+
+
+def editar_perfil(pessoa_id, dados):
+    session = SessionLocal()
+    try:
+        pessoa = session.get(Pessoa, pessoa_id)
+        if pessoa is None:
+            raise ValueError(f"Usuário com id {pessoa_id} não encontrado.")
+
+        if "nome_completo" in dados:
+            pessoa.nome_completo = _texto_obrigatorio(dados["nome_completo"], "nome_completo")
+        if "funcao" in dados:
+            pessoa.funcao = _texto_obrigatorio(dados["funcao"], "funcao")
+        if "data_nasc" in dados:
+            pessoa.data_nasc = _converter_data(dados["data_nasc"], "data_nasc")
+        if dados.get("senha"):
+            if len(dados["senha"]) < 6:
+                raise ValueError("A senha deve ter pelo menos 6 caracteres.")
+            pessoa.senha = generate_password_hash(dados["senha"])
+
+        # CPF
+        if "cpf" in dados:
+            cpf = _texto_obrigatorio(dados["cpf"], "cpf")
+            if not cpf.isdigit() or len(cpf) != 11:
+                raise ValueError("CPF inválido. Use apenas 11 números.")
+            cpf_existente = session.scalars(
+                select(Pessoa_fisica).where(
+                    Pessoa_fisica.cpf == cpf, Pessoa_fisica.id_pessoa != pessoa_id
+                )
+            ).first()
+            if cpf_existente:
+                raise ValueError("Este CPF já está cadastrado em outra conta.")
+
+            pessoa_fisica = session.scalars(
+                select(Pessoa_fisica).where(Pessoa_fisica.id_pessoa == pessoa_id)
+            ).first()
+            if pessoa_fisica:
+                pessoa_fisica.cpf = cpf
+            else:
+                session.add(Pessoa_fisica(cpf=cpf, id_pessoa=pessoa_id))
+
+        # Email
+        if "email_pessoal" in dados:
+            if dados["email_pessoal"]:
+                email_existente = session.scalars(
+                    select(Email).where(
+                        Email.email_pessoal == dados["email_pessoal"],
+                        Email.id_pessoa != pessoa_id
+                    )
+                ).first()
+                if email_existente:
+                    raise ValueError("Este e-mail já está em uso por outra conta.")
+
+            email = session.scalars(
+                select(Email).where(Email.id_pessoa == pessoa_id)
+            ).first()
+            if email:
+                email.email_pessoal = _texto_opcional(dados.get("email_pessoal"))
+            else:
+                session.add(Email(email_pessoal=_texto_opcional(dados.get("email_pessoal")), id_pessoa=pessoa_id))
+
+        # Telefone
+        if "telefone_celular" in dados:
+            telefone = session.scalars(
+                select(Telefone).where(Telefone.id_pessoa == pessoa_id)
+            ).first()
+            if telefone:
+                telefone.telefone_celular = _texto_opcional(dados.get("telefone_celular"))
+            else:
+                session.add(Telefone(telefone_celular=_texto_opcional(dados.get("telefone_celular")), id_pessoa=pessoa_id))
+
+        # Endereço
+        campos_endereco = ["cep", "rua", "numero", "complemento", "bairro", "cidade", "estado"]
+        if any(c in dados for c in campos_endereco):
+            endereco = session.scalars(
+                select(Endereco).where(Endereco.id_pessoa == pessoa_id)
+            ).first()
+            if endereco:
+                if "cep"         in dados: endereco.cep         = _texto_obrigatorio(dados["cep"], "cep")
+                if "rua"         in dados: endereco.rua         = _texto_obrigatorio(dados["rua"], "rua")
+                if "numero"      in dados: endereco.numero      = _texto_obrigatorio(dados["numero"], "numero")
+                if "complemento" in dados: endereco.complemento = _texto_opcional(dados.get("complemento"))
+                if "bairro"      in dados: endereco.bairro      = _texto_obrigatorio(dados["bairro"], "bairro")
+                if "cidade"      in dados: endereco.cidade      = _texto_obrigatorio(dados["cidade"], "cidade")
+                if "estado"      in dados: endereco.estado      = _texto_obrigatorio(dados["estado"], "estado")
+
+        session.commit()
+        session.refresh(pessoa)
+        return pessoa.to_dict()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
         
 # ──────────────────────────────────────────
 # PESSOA
