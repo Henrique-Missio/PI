@@ -297,3 +297,17 @@ def pagina_perfil():
     if not _usuario_logado():
         return fk.redirect("/login")
     return fk.render_template("perfil.html")
+
+
+@paginas.get("/cadastrar-aparelho")
+def pagina_cadastrar_aparelho():
+    if not _usuario_logado():
+        return fk.redirect("/login")
+    return fk.render_template("cadastrar-aparelho.html")
+
+
+@paginas.get("/cadastrar-peca")
+def pagina_cadastrar_peca():
+    if not _usuario_logado():
+        return fk.redirect("/login")
+    return fk.render_template("cadastrar-peca.html")

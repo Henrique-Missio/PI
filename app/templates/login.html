@@ -4,43 +4,47 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pids Tech - Login</title>
+    <title>Pids Tech — Login</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
 
 <body>
-    <header class="topo">
-        <h1>Pids Tech</h1>
-        <p class="subtitulo">Faça login para continuar</p>
-        <div class="topo-acoes">
-            <button onclick="window.location.href='/'" class="botao-secundario">Voltar</button>
-        </div>
+
+    <header class="header">
+        <a class="header-logo" href="/">Pids<span>Tech</span></a>
     </header>
 
-    <main class="conteudo-centralizado">
-        <div class="card-form">
-            <h2>Login</h2>
-            <span id="mensagem-login" class="mensagem"></span>
-
-            <div class="campo">
-                <label for="email">E-mail *</label>
-                <input type="email" id="email" placeholder="seu@email.com" />
+    <div class="auth-page">
+        <div class="auth-card">
+            <div class="auth-card-header">
+                <div class="auth-card-titulo">Entrar</div>
+                <div class="auth-card-subtitulo">Acesse o sistema de gestão de estoque</div>
             </div>
 
-            <div class="campo">
-                <label for="senha">Senha *</label>
-                <input type="password" id="senha" placeholder="••••••••" />
+            <div class="auth-card-corpo">
+                <span id="mensagem-login" class="mensagem"></span>
+
+                <div class="campo">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" placeholder="seu@email.com" />
+                </div>
+
+                <div class="campo">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" placeholder="••••••••" />
+                </div>
+
+                <button id="botao-login" class="btn btn-primary"
+                    style="width:100%;justify-content:center;padding:.65rem">
+                    Entrar
+                </button>
             </div>
 
-            <div class="acoes-formulario">
-                <button id="botao-login" class="botao-primario">Entrar</button>
-            </div>
-
-            <p class="link-alternativo">
+            <div class="auth-card-rodape">
                 Não tem conta? <a href="/cadastro">Cadastre-se</a>
-            </p>
+            </div>
         </div>
-    </main>
+    </div>
 
     <script src="{{ url_for('static', filename='login.js') }}"></script>
 </body>
