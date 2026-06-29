@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pids Tech — Relatórios</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+    <header class="header">
+        <a class="header-logo" href="/">Pids<span>Tech</span></a>
+        <div class="header-auth">
+            <a href="/" class="btn btn-secondary btn-sm">← Voltar ao estoque</a>
+        </div>
+    </header>
+
+    <div class="page-wrapper">
+
+        <!-- Filtros -->
+        <div class="filtros-card" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+
+            <div class="filtro-grupo">
+                <label class="filtro-label">Período</label>
+                <select id="f-periodo" class="filtro-input">
+                    <option value="7">Última semana</option>
+                    <option value="30" selected>1 mês</option>
+                    <option value="90">3 meses</option>
+                    <option value="custom">Personalizado</option>
+                </select>
+            </div>
+
+            <div id="grupo-custom" style="display:none; flex-direction: row; align-items: flex-end; gap: .5rem;">
+                <div class="filtro-grupo" style="min-width:130px; flex:none;">
+                    <label class="filtro-label">De</label>
+                    <input type="date" id="f-data-de" class="filtro-input" />
+                </div>
+                <div class="filtro-grupo" style="min-width:130px; flex:none;">
+                    <label class="filtro-label">Até</label>
+                    <input type="date" id="f-data-ate" class="filtro-input" />
+                </div>
+            </div>
+
+            <div class="filtro-grupo">
+                <label class="filtro-label">Categoria</label>
+                <select id="f-categoria" class="filtro-input">
+                    <option value="">Todos</option>
+                    <option value="aparelho">Aparelho</option>
+                    <option value="peca">Peça</option>
+                </select>
+            </div>
+
+            <div class="filtro-grupo">
+                <label class="filtro-label">Nome</label>
+                <input type="text" id="f-nome" class="filtro-input" placeholder="Ex: notebook, placa..." />
+            </div>
+
+            <div style="display:flex; align-items:flex-end; gap:.5rem; flex-shrink:0;">
+                <button id="btn-gerar" class="btn btn-primary">Gerar</button>
+                <button id="btn-baixar" class="btn btn-secondary-dark" disabled>⬇ Baixar PDF</button>
+            </div>
+
+        </div>
+
+        <!-- Cards de resumo -->
+        <div class="relatorio-cards" id="relatorio-cards" style="display:none;">
+            <div class="relatorio-card">
+                <div class="relatorio-card-label">Total no estoque</div>
+                <div class="relatorio-card-valor" id="card-total">—</div>
+            </div>
+            <div class="relatorio-card relatorio-card-teal">
+                <div class="relatorio-card-label">Recebidos no mês</div>
+                <div class="relatorio-card-valor" id="card-recebidos">—</div>
+            </div>
+            <div class="relatorio-card relatorio-card-blue">
+                <div class="relatorio-card-label">Consertados no mês</div>
+                <div class="relatorio-card-valor" id="card-consertados">—</div>
+            </div>
+            <div class="relatorio-card relatorio-card-green">
+                <div class="relatorio-card-label">Doados</div>
+                <div class="relatorio-card-valor" id="card-doados">—</div>
+            </div>
+        </div>
+
+        <!-- Seletor de gráfico + canvas -->
+        <div class="form-card" id="area-grafico" style="display:none; margin-bottom: 1.5rem;">
+            <div class="form-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem;">
+                <div>
+                    <div class="form-card-titulo">Visualização</div>
+                    <div class="form-card-subtitulo">Dados filtrados do estoque</div>
+                </div>
+                <div style="display:flex; gap:.5rem;">
+                    <button class="btn btn-secondary btn-sm grafico-tab ativo" data-tipo="barras">Por status</button>
+                    <button class="btn btn-secondary btn-sm grafico-tab" data-tipo="linha">Por mês</button>
+                </div>
+            </div>
+            <div class="form-card-corpo" style="padding: 1.5rem;">
+                <canvas id="grafico-principal" height="120"></canvas>
+            </div>
+        </div>
+
+        <!-- Tabela de itens -->
+        <div class="form-card" id="area-tabela" style="display:none;">
+            <div class="form-card-header">
+                <div class="form-card-titulo">Itens encontrados</div>
+                <div class="form-card-subtitulo" id="label-contagem">—</div>
+            </div>
+            <div class="form-card-corpo" style="overflow-x:auto;">
+                <table class="tabela" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Marca</th>
+                            <th>Categoria</th>
+                            <th>Status</th>
+                            <th>Entrada</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-itens"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="relatorio-vazio" style="display:none;" class="td-vazio" style="padding:3rem; text-align:center;">
+            Nenhum item encontrado com os filtros selecionados.
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='relatorios.js') }}"></script>
+</body>
+
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pids Tech — Cadastrar Aparelho</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+
+<body>
+
+    <header class="header">
+        <a class="header-logo" href="/">Pids<span>Tech</span></a>
+        <div class="header-auth">
+            <a href="/" class="btn btn-secondary">← Voltar ao estoque</a>
+        </div>
+    </header>
+
+    <div class="form-page">
+        <div class="form-card">
+            <div class="form-card-header">
+                <div class="form-card-titulo">Cadastrar aparelho</div>
+                <div class="form-card-subtitulo">Preencha as informações do equipamento recebido</div>
+            </div>
+
+            <div class="form-card-corpo">
+                <div class="form-secao">
+                    <div class="form-secao-titulo">Identificação</div>
+                    <div class="form-grid-2">
+                        <div class="campo">
+                            <label for="nome">Nome *</label>
+                            <input type="text" id="nome" placeholder="Ex: Notebook, Desktop..." />
+                        </div>
+                        <div class="campo">
+                            <label for="marca">Marca *</label>
+                            <input type="text" id="marca" placeholder="Ex: Dell, Lenovo..." />
+                        </div>
+                    </div>
+                    <div class="campo">
+                        <label for="informacoes">Informações *</label>
+                        <textarea id="informacoes" placeholder="Especificações gerais do aparelho" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-secao">
+                    <div class="form-secao-titulo">Estado</div>
+                    <div class="form-grid-2">
+                        <div class="campo">
+                            <label for="status">Status *</label>
+                            <select id="status">
+                                <option value="" disabled selected>Selecione...</option>
+                                <option value="Funcional">Funcional</option>
+                                <option value="Não funcional">Não funcional</option>
+                                <option value="Em conserto">Em conserto</option>
+                                <option value="Reservado">Reservado</option>
+                                <option value="Doado">Doado</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label for="data_entrada">Data de entrada</label>
+                            <input type="date" id="data_entrada" />
+                        </div>
+                    </div>
+                    <div class="campo">
+                        <label for="problema">Problema / Observação</label>
+                        <textarea id="problema" placeholder="Descreva o defeito ou observação..." rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-rodape">
+                <span id="mensagem-aparelho" class="mensagem"></span>
+                <div style="display:flex;gap:.5rem">
+                    <a href="/" class="btn btn-ghost">Cancelar</a>
+                    <button id="btn-cadastrar" class="btn btn-primary">Cadastrar aparelho</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='cadastrar-aparelho.js') }}"></script>
+</body>
+
+</html>

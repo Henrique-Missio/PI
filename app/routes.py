@@ -1,5 +1,6 @@
 import flask as fk
 from sqlalchemy.exc import IntegrityError
+from app.relatorio import gerar_dados_relatorio, gerar_pdf
 from app.servicos import (
     login, cadastrar_usuario, listar_usuarios, excluir_usuario,
     buscar_perfil, editar_perfil,
@@ -274,6 +275,41 @@ def get_estoque_por_id(estoque_id):
         return _erro(str(exc), 404)
 
 
+@bp.get("/relatorio/dados")
+def rota_relatorio_dados():
+    erro = _requer_admin()
+    if erro:
+        return erro
+    args = fk.request.args
+    dados = gerar_dados_relatorio(
+        data_de=args.get("data_de"),
+        data_ate=args.get("data_ate"),
+        categoria=args.get("categoria") or None,
+        nome=args.get("nome") or None,
+    )
+    return fk.jsonify(dados)
+
+
+@bp.get("/relatorio/pdf")
+def rota_relatorio_pdf():
+    erro = _requer_admin()
+    if erro:
+        return erro
+    args = fk.request.args
+    dados = gerar_dados_relatorio(
+        data_de=args.get("data_de"),
+        data_ate=args.get("data_ate"),
+        categoria=args.get("categoria") or None,
+        nome=args.get("nome") or None,
+    )
+    pdf_bytes = gerar_pdf(dados)
+    return fk.Response(
+        pdf_bytes,
+        mimetype="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=relatorio-pidstech-{dados['gerado_em'].replace('/', '-')}.pdf"}
+    )
+
+
 # ── PÁGINAS ──
 @paginas.get("/")
 def home():
@@ -297,3 +333,37 @@ def pagina_perfil():
     if not _usuario_logado():
         return fk.redirect("/login")
     return fk.render_template("perfil.html")
+
+
+@paginas.get("/voluntarios")
+def pagina_voluntarios():
+    usuario = _usuario_logado()
+    if not usuario:
+        return fk.redirect("/login")
+    if usuario.get("tipo") != "administrador":
+        return fk.redirect("/")
+    return fk.render_template("voluntarios.html")
+
+
+@paginas.get("/relatorios")
+def pagina_relatorios():
+    usuario = _usuario_logado()
+    if not usuario:
+        return fk.redirect("/login")
+    if usuario.get("tipo") != "administrador":
+        return fk.redirect("/")
+    return fk.render_template("relatorios.html")
+
+
+@paginas.get("/cadastrar-aparelho")
+def pagina_cadastrar_aparelho():
+    if not _usuario_logado():
+        return fk.redirect("/login")
+    return fk.render_template("cadastrar-aparelho.html")
+
+
+@paginas.get("/cadastrar-peca")
+def pagina_cadastrar_peca():
+    if not _usuario_logado():
+        return fk.redirect("/login")
+    return fk.render_template("cadastrar-peca.html")

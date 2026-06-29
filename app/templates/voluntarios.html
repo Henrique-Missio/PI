@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pids Tech — Voluntários</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+
+<body>
+
+    <header class="header">
+        <a class="header-logo" href="/">Pids<span>Tech</span></a>
+        <div class="header-auth">
+            <a href="/" class="btn btn-secondary btn-sm">← Voltar ao estoque</a>
+        </div>
+    </header>
+
+    <div class="page-wrapper">
+        <div class="form-card" style="max-width: 700px; margin: 2rem auto;">
+            <div class="form-card-header">
+                <div class="form-card-titulo">Gerenciar voluntários</div>
+                <div class="form-card-subtitulo">Voluntários cadastrados no sistema</div>
+            </div>
+            <div class="form-card-corpo">
+                <div id="lista-voluntarios"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='voluntarios.js') }}"></script>
+</body>
+
+</html>

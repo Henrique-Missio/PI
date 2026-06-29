@@ -4,60 +4,101 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pids Tech - Painel</title>
+  <title>Pids Tech — Estoque</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
 
 <body>
-  <header class="topo">
-    <h1>Pids Tech</h1>
-    <p class="subtitulo">Consumindo a API <code>/api/...</code></p>
-    <div class="topo-acoes" id="area-auth">
-      <!-- preenchido dinamicamente pelo app.js -->
-    </div>
+
+  <header class="header">
+    <a class="header-logo" href="/">Pids<span>Tech</span></a>
+    <div class="header-auth" id="area-auth"></div>
   </header>
 
-  <nav class="abas">
-    <button class="aba ativa" data-tipo="aparelhos">Aparelhos</button>
-    <button class="aba" data-tipo="pecas">Peças</button>
-    <button class="aba" data-tipo="estoque">Estoque</button>
-  </nav>
-
-  <main class="conteudo">
-    <section id="painel-formulario">
-      <h2 id="titulo-formulario">Novo aparelho</h2>
-      <form id="formulario" novalidate>
-        <div id="campos" class="grade-campos"></div>
-        <div class="acoes-formulario">
-          <button type="submit" class="botao-primario">Cadastrar</button>
-          <span id="mensagem-formulario" class="mensagem"></span>
-        </div>
-      </form>
-    </section>
-
-    <section id="painel-tabela">
-      <div class="cabecalho-painel">
-        <h2 id="titulo-lista">Aparelhos</h2>
-        <button id="botao-recarregar" type="button">Recarregar</button>
+  <div class="page-wrapper">
+    <div class="page-topbar">
+      <h1 class="page-title">Estoque</h1>
+      <div class="page-actions" id="acoes-admin" style="display:none">
+        <a href="/cadastrar-aparelho" class="btn btn-secondary-dark">+ Aparelho</a>
+        <a href="/cadastrar-peca" class="btn btn-primary">+ Peça</a>
       </div>
-      <div id="status" class="status"></div>
-      <table id="tabela">
-        <thead>
-          <tr id="cabecalho"></tr>
-        </thead>
-        <tbody id="corpo"></tbody>
-      </table>
-    </section>
-  </main>
+    </div>
 
-  <div id="modal" class="modal-fundo" style="display:none">
+    <div class="filtros-card">
+      <div class="filtro-grupo">
+        <label>Categoria</label>
+        <select id="f-categoria">
+          <option value="">Todas</option>
+          <option value="aparelho">Aparelho</option>
+          <option value="peca">Peça</option>
+        </select>
+      </div>
+      <div class="filtro-grupo">
+        <label>Status</label>
+        <select id="f-status">
+          <option value="">Todos</option>
+          <option value="Funcional">Funcional</option>
+          <option value="Não funcional">Não funcional</option>
+          <option value="Em conserto">Em conserto</option>
+          <option value="Reservado">Reservado</option>
+          <option value="Doado">Doado</option>
+        </select>
+      </div>
+      <div class="filtro-grupo">
+        <label>Nome</label>
+        <input type="text" id="f-nome" placeholder="Buscar por nome..." />
+      </div>
+      <div class="filtro-grupo">
+        <label>Marca</label>
+        <input type="text" id="f-marca" placeholder="Buscar por marca..." />
+      </div>
+      <div class="filtro-grupo">
+        <label>Data entrada (de)</label>
+        <input type="date" id="f-data-de" />
+      </div>
+      <div class="filtro-grupo">
+        <label>Data entrada (até)</label>
+        <input type="date" id="f-data-ate" />
+      </div>
+      <div class="filtros-acoes">
+        <button id="btn-limpar-filtros" class="btn btn-ghost btn-sm">Limpar</button>
+      </div>
+    </div>
+
+    <div class="tabela-card">
+      <div class="tabela-header">
+        <span class="tabela-info"><strong id="contagem">0</strong> itens encontrados</span>
+        <button id="btn-recarregar" class="btn btn-ghost btn-sm">↺ Atualizar</button>
+      </div>
+      <div class="tabela-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Categoria</th>
+              <th>Nome</th>
+              <th>Marca</th>
+              <th>Status</th>
+              <th>Data entrada</th>
+              <th>Data saída</th>
+            </tr>
+          </thead>
+          <tbody id="corpo-tabela"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de detalhes/edição -->
+  <div id="modal" class="modal-fundo">
     <div class="modal-caixa">
-      <button id="modal-fechar">✕</button>
-      <h2 id="modal-titulo"></h2>
-      <div id="modal-conteudo"></div>
-      <div class="modal-acoes">
-        <button id="modal-editar" class="botao-primario">Editar</button>
-        <button id="modal-excluir" class="botao-excluir">Excluir</button>
+      <div class="modal-topo">
+        <h2 class="modal-titulo" id="modal-titulo"></h2>
+        <button class="modal-fechar-btn" id="modal-fechar">✕</button>
+      </div>
+      <div class="modal-corpo" id="modal-conteudo"></div>
+      <div class="modal-rodape" id="modal-rodape">
+        <button id="modal-editar" class="btn btn-secondary-dark">Editar</button>
+        <button id="modal-excluir" class="btn btn-danger">Excluir</button>
       </div>
     </div>
   </div>

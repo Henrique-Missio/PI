@@ -1,9 +1,6 @@
 const mensagem = document.getElementById("mensagem-perfil");
 const botaoSalvar = document.getElementById("botao-salvar-perfil");
 const botaoExcluir = document.getElementById("botao-excluir-conta");
-const cardVoluntarios = document.getElementById("card-voluntarios");
-const listaVoluntarios = document.getElementById("lista-voluntarios");
-
 let usuarioAtual = null;
 
 function mostrarErro(msg) {
@@ -68,63 +65,6 @@ async function carregarPerfil() {
     }
 }
 
-async function verificarAdmin() {
-    try {
-        const resposta = await fetch("/api/me");
-        if (resposta.ok) {
-            usuarioAtual = await resposta.json();
-            if (usuarioAtual.tipo === "administrador") {
-                cardVoluntarios.style.display = "block";
-                await carregarVoluntarios();
-            }
-        }
-    } catch {
-        usuarioAtual = null;
-    }
-}
-
-async function carregarVoluntarios() {
-    try {
-        const resposta = await fetch("/api/usuarios");
-        if (!resposta.ok) return;
-        const usuarios = await resposta.json();
-        const voluntarios = usuarios.filter(u => u.tipo === "voluntario");
-
-        listaVoluntarios.innerHTML = "";
-        if (!voluntarios.length) {
-            listaVoluntarios.innerHTML = "<p>Nenhum voluntário cadastrado.</p>";
-            return;
-        }
-
-        voluntarios.forEach(v => {
-            const linha = document.createElement("div");
-            linha.className = "linha-voluntario";
-
-            const nome = document.createElement("span");
-            nome.textContent = `${v.nome_completo} — ${v.funcao}`;
-
-            const botao = document.createElement("button");
-            botao.textContent = "Excluir";
-            botao.className = "botao-excluir";
-            botao.onclick = async () => {
-                if (!confirm(`Excluir o voluntário "${v.nome_completo}"?`)) return;
-                try {
-                    const resp = await fetch(`/api/usuarios/${v.id}`, { method: "DELETE" });
-                    if (!resp.ok) throw new Error("Erro ao excluir.");
-                    await carregarVoluntarios();
-                } catch (erro) {
-                    alert(erro.message);
-                }
-            };
-
-            linha.appendChild(nome);
-            linha.appendChild(botao);
-            listaVoluntarios.appendChild(linha);
-        });
-    } catch {
-        listaVoluntarios.innerHTML = "<p>Erro ao carregar voluntários.</p>";
-    }
-}
 
 botaoSalvar.onclick = async () => {
     const dados = {
@@ -177,4 +117,3 @@ botaoExcluir.onclick = async () => {
 };
 
 carregarPerfil();
-verificarAdmin();
