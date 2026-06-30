@@ -111,7 +111,6 @@ body {
 }
 
 .btn:disabled {
-<<<<<<< HEAD
   opacity: .45;
   cursor: not-allowed;
 }
@@ -121,9 +120,6 @@ body {
   color: var(--text-muted);
   border-color: var(--border);
   background: transparent;
-=======
-  opacity: .6;
->>>>>>> 470d3debbb73909de80e6c6256e0415eb09c76ee
   cursor: not-allowed;
 }
 
@@ -785,8 +781,9 @@ tbody td {
     flex-direction: column;
     align-items: flex-start;
   }
-<<<<<<< HEAD
+
 }
+
 /* ── Avatar / Dropdown ── */
 .avatar-wrapper {
   position: relative;
@@ -812,7 +809,7 @@ tbody td {
 
 .avatar-btn:hover {
   opacity: .85;
-  box-shadow: 0 0 0 3px rgba(13,148,136,.3);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, .3);
 }
 
 .avatar-dropdown {
@@ -821,9 +818,9 @@ tbody td {
   top: calc(100% + 10px);
   right: 0;
   background: #1E293B;
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid rgba(255, 255, 255, .08);
   border-radius: var(--radius);
-  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
   min-width: 180px;
   z-index: 200;
   overflow: hidden;
@@ -835,8 +832,15 @@ tbody td {
 }
 
 @keyframes dropdown-in {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .avatar-dropdown-nome {
@@ -850,7 +854,7 @@ tbody td {
 
 .avatar-dropdown-sep {
   height: 1px;
-  background: rgba(255,255,255,.07);
+  background: rgba(255, 255, 255, .07);
   margin: 0;
 }
 
@@ -870,7 +874,7 @@ tbody td {
 }
 
 .avatar-dropdown-item:hover {
-  background: rgba(255,255,255,.06);
+  background: rgba(255, 255, 255, .06);
   color: #fff;
 }
 
@@ -879,7 +883,7 @@ tbody td {
 }
 
 .avatar-dropdown-sair:hover {
-  background: rgba(248,113,113,.08);
+  background: rgba(248, 113, 113, .08);
   color: #FCA5A5;
 }
 
@@ -916,9 +920,17 @@ tbody td {
   color: var(--text);
 }
 
-.relatorio-card-teal  .relatorio-card-valor { color: #0D9488; }
-.relatorio-card-blue  .relatorio-card-valor { color: #3B82F6; }
-.relatorio-card-green .relatorio-card-valor { color: #10B981; }
+.relatorio-card-teal .relatorio-card-valor {
+  color: #0D9488;
+}
+
+.relatorio-card-blue .relatorio-card-valor {
+  color: #3B82F6;
+}
+
+.relatorio-card-green .relatorio-card-valor {
+  color: #10B981;
+}
 
 .grafico-tab.ativo {
   background: var(--accent);
@@ -931,6 +943,3 @@ tbody td {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-=======
-}
->>>>>>> 470d3debbb73909de80e6c6256e0415eb09c76ee
