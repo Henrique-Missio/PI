@@ -148,8 +148,10 @@ function renderizarGrafico(tipo, dados) {
     if (graficoAtivo) { graficoAtivo.destroy(); graficoAtivo = null; }
 
     if (tipo === "barras") {
-        const labels = Object.keys(dados.status_count);
-        const values = Object.values(dados.status_count);
+        const todosStatus = ["Funcional","Não funcional","Em conserto","Reservado","Doado"];
+        const sc = dados.status_count || {};
+        const labels = todosStatus;
+        const values = todosStatus.map(s => sc[s] || 0);
         const bgColors = labels.map(l => COR_STATUS[l] || "#64748B");
 
         graficoAtivo = new Chart(canvas, {
@@ -177,8 +179,14 @@ function renderizarGrafico(tipo, dados) {
             }
         });
     } else {
-        const meses = Object.keys(dados.por_mes);
-        const values = Object.values(dados.por_mes);
+        const pm = dados.por_mes || {};
+        const meses = Object.keys(pm).length ? Object.keys(pm) : [];
+        const values = meses.map(m => pm[m]);
+        if (!meses.length) {
+            // placeholder vazio
+            meses.push(new Date().toISOString().slice(0,7));
+            values.push(0);
+        }
         const labels = meses.map(m => {
             const [ano, mes] = m.split("-");
             const nomes = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
