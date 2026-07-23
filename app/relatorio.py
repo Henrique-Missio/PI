@@ -16,14 +16,14 @@ from sqlalchemy import select
 from app.database import SessionLocal
 from app.models import Aparelhos, Pecas
 
-TEAL  = colors.HexColor("#0D9488")
-DARK  = colors.HexColor("#0F172A")
+TEAL = colors.HexColor("#0D9488")
+DARK = colors.HexColor("#0F172A")
 SLATE = colors.HexColor("#64748B")
 LIGHT = colors.HexColor("#F1F5F9")
 WHITE = colors.white
-RED   = colors.HexColor("#EF4444")
-BLUE  = colors.HexColor("#3B82F6")
-GRAY  = colors.HexColor("#94A3B8")
+RED = colors.HexColor("#EF4444")
+BLUE = colors.HexColor("#3B82F6")
+GRAY = colors.HexColor("#94A3B8")
 GREEN = colors.HexColor("#10B981")
 
 
@@ -40,7 +40,7 @@ def gerar_dados_relatorio(data_de=None, data_ate=None, categoria=None, nome=None
     session = SessionLocal()
     try:
         aparelhos = session.scalars(select(Aparelhos)).all()
-        pecas     = session.scalars(select(Pecas)).all()
+        pecas = session.scalars(select(Pecas)).all()
 
         itens = []
         for a in aparelhos:
@@ -48,15 +48,17 @@ def gerar_dados_relatorio(data_de=None, data_ate=None, categoria=None, nome=None
         for p in pecas:
             itens.append({**p.to_dict(), "categoria": "peca"})
 
-        de  = _parse_data(data_de)
+        de = _parse_data(data_de)
         ate = _parse_data(data_ate)
 
         def dentro_periodo(item):
             entrada = _parse_data(item.get("data_entrada"))
             if not entrada:
                 return True
-            if de  and entrada < de:  return False
-            if ate and entrada > ate: return False
+            if de and entrada < de:
+                return False
+            if ate and entrada > ate:
+                return False
             return True
 
         filtrado = [i for i in itens if (
@@ -65,18 +67,18 @@ def gerar_dados_relatorio(data_de=None, data_ate=None, categoria=None, nome=None
             dentro_periodo(i)
         )]
 
-        hoje       = date.today()
+        hoje = date.today()
         inicio_mes = hoje.replace(day=1)
 
-        total       = len(filtrado)
-        recebidos   = sum(1 for i in filtrado
-                         if _parse_data(i.get("data_entrada")) and
-                            _parse_data(i.get("data_entrada")) >= inicio_mes)
-        doados      = sum(1 for i in filtrado if i.get("status") == "Doado")
+        total = len(filtrado)
+        recebidos = sum(1 for i in filtrado
+                        if _parse_data(i.get("data_entrada")) and
+                        _parse_data(i.get("data_entrada")) >= inicio_mes)
+        doados = sum(1 for i in filtrado if i.get("status") == "Doado")
         consertados = sum(1 for i in filtrado
-                         if i.get("status") == "Funcional" and
-                            _parse_data(i.get("data_entrada")) and
-                            _parse_data(i.get("data_entrada")) >= inicio_mes)
+                          if i.get("status") == "Funcional" and
+                          _parse_data(i.get("data_entrada")) and
+                          _parse_data(i.get("data_entrada")) >= inicio_mes)
 
         status_count = {}
         for i in filtrado:
@@ -179,7 +181,8 @@ def gerar_pdf(dados):
         f"Categoria: {dados['categoria']}  |  Nome: {dados['nome_filtro']}",
         normal_style
     ))
-    story.append(HRFlowable(width="100%", thickness=1, color=LIGHT, spaceAfter=10))
+    story.append(HRFlowable(width="100%", thickness=1,
+                 color=LIGHT, spaceAfter=10))
 
     # ── Cards resumo ──
     story.append(Paragraph("Resumo", secao_style))
@@ -226,13 +229,15 @@ def gerar_pdf(dados):
         ]))
         story.append(t)
     else:
-        story.append(Paragraph("Nenhum dado de status para o período selecionado.", normal_style))
+        story.append(
+            Paragraph("Nenhum dado de status para o período selecionado.", normal_style))
     story.append(Spacer(1, 16))
 
     # ── Recebimentos por mês ──
     story.append(Paragraph("Recebimentos por Mês", secao_style))
     if dados["por_mes"]:
-        nomes_mes = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
+        nomes_mes = ["Jan", "Fev", "Mar", "Abr", "Mai",
+                     "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
         rows = [["Mês", "Itens recebidos"]]
         for mes, qtd in dados["por_mes"].items():
             try:
@@ -256,7 +261,8 @@ def gerar_pdf(dados):
         ]))
         story.append(t)
     else:
-        story.append(Paragraph("Nenhum dado de recebimento para o período selecionado.", normal_style))
+        story.append(Paragraph(
+            "Nenhum dado de recebimento para o período selecionado.", normal_style))
     story.append(Spacer(1, 16))
 
     # ── Lista de itens ──
@@ -286,7 +292,8 @@ def gerar_pdf(dados):
         ]))
         story.append(t)
     else:
-        story.append(Paragraph("Nenhum item encontrado com os filtros aplicados.", normal_style))
+        story.append(
+            Paragraph("Nenhum item encontrado com os filtros aplicados.", normal_style))
 
     # ── Rodapé ──
     story.append(Spacer(1, 20))
@@ -294,7 +301,8 @@ def gerar_pdf(dados):
     story.append(Spacer(1, 6))
     story.append(Paragraph(
         "Pids Tech — Sistema de Gestão de Eletrônicos Doados | Senac",
-        ParagraphStyle("rodape", fontSize=8, textColor=GRAY, alignment=TA_CENTER)
+        ParagraphStyle("rodape", fontSize=8,
+                       textColor=GRAY, alignment=TA_CENTER)
     ))
 
     doc.build(story)

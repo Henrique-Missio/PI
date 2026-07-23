@@ -26,6 +26,10 @@
 
     <div class="filtros-card">
       <div class="filtro-grupo">
+        <label>Código</label>
+        <input type="text" id="f-codigo" placeholder="Ex: AP-0001" />
+      </div>
+      <div class="filtro-grupo">
         <label>Categoria</label>
         <select id="f-categoria">
           <option value="">Todas</option>
@@ -74,12 +78,14 @@
         <table>
           <thead>
             <tr>
+              <th>Cód.</th>
               <th>Categoria</th>
               <th>Nome</th>
               <th>Marca</th>
               <th>Status</th>
               <th>Data entrada</th>
               <th>Data saída</th>
+              <th class="th-acoes"></th>
             </tr>
           </thead>
           <tbody id="corpo-tabela"></tbody>

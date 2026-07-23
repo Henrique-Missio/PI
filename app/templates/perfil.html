@@ -69,7 +69,17 @@
                     <div class="form-secao-titulo">Alterar senha</div>
                     <div class="campo">
                         <label for="nova_senha">Nova senha</label>
-                        <input type="password" id="nova_senha" placeholder="Deixe em branco para não alterar" />
+                        <div class="campo-senha-wrapper">
+                            <input type="password" id="nova_senha" placeholder="Deixe em branco para não alterar" maxlength="72"/>
+                            <button type="button" class="toggle-senha" data-target="nova_senha"
+                                aria-label="Mostrar senha" >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

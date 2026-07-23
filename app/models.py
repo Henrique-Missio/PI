@@ -66,7 +66,7 @@ class Estoque(Base):
     __tablename__ = "estoque"
 
     id          = Column(Integer, primary_key=True, autoincrement=True, unique=True)
-    categoria   = Column(String(15), nullable=False)  # "aparelho" ou "peca"
+    categoria   = Column(String(15), nullable=False)
     id_aparelho = Column(Integer, ForeignKey("aparelhos.id"), nullable=True)
     id_pecas    = Column(Integer, ForeignKey("pecas.id"), nullable=True)
 
@@ -168,8 +168,8 @@ class Endereco(Base):
     rua         = Column(String(60), nullable=False)
     numero      = Column(String(10), nullable=False)   
     complemento = Column(String(60), nullable=True)   
-    bairro      = Column(String(30), nullable=False)
-    cidade      = Column(String(30), nullable=False)
+    bairro      = Column(String(40), nullable=False)
+    cidade      = Column(String(40), nullable=False)
     estado      = Column(String(30), nullable=False)
     id_pessoa   = Column(Integer, ForeignKey("pessoa.id"), nullable=False)
 
@@ -196,8 +196,8 @@ class Email(Base):
     __tablename__ = "email"
 
     id              = Column(Integer, primary_key=True, autoincrement=True)
-    email_pessoal   = Column(String(40), nullable=True)
-    email_juridico  = Column(String(40), nullable=True)  
+    email_pessoal   = Column(String(100), nullable=True)
+    email_juridico  = Column(String(100), nullable=True)  
     id_pessoa       = Column(Integer, ForeignKey("pessoa.id"), nullable=False)
 
     pessoa = relationship("Pessoa", back_populates="emails")

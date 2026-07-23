@@ -3,6 +3,7 @@ Testes do estoque: cadastrar, editar, excluir e listar Aparelhos e Peças.
 Testa as funções reais do servicos.py, que gerenciam seu próprio SessionLocal.
 """
 import pytest
+from datetime import date, timedelta
 from app.servicos import (
     cadastrar_aparelho, editar_aparelho, excluir_aparelho,
     buscar_aparelho_por_id, listar_aparelhos,
@@ -92,7 +93,6 @@ class TestCadastrarAparelho:
         assert resultado["problema"] == "Tela trincada"
 
     def test_cadastro_data_entrada_padrao_hoje(self):
-        from datetime import date
         resultado = cadastrar_aparelho(APARELHO_VALIDO)
         assert resultado["data_entrada"] == str(date.today())
 
@@ -101,9 +101,11 @@ class TestCadastrarAparelho:
         assert resultado["data_saida"] is None
 
     def test_cadastro_com_data_entrada_explicita(self):
-        dados = {**APARELHO_VALIDO, "data_entrada": "01-01-2024"}
+        # data no passado — não pode ser futura em relação a hoje
+        entrada = date.today() - timedelta(days=365)
+        dados = {**APARELHO_VALIDO, "data_entrada": entrada.strftime("%d-%m-%Y")}
         resultado = cadastrar_aparelho(dados)
-        assert resultado["data_entrada"] == "2024-01-01"
+        assert resultado["data_entrada"] == entrada.isoformat()
 
     def test_cadastro_nome_obrigatorio(self):
         dados = {**APARELHO_VALIDO, "nome": ""}
@@ -138,6 +140,13 @@ class TestCadastrarAparelho:
     def test_cadastro_data_formato_invalido(self):
         dados = {**APARELHO_VALIDO, "data_entrada": "2024/01/01"}
         with pytest.raises(ValueError):
+            cadastrar_aparelho(dados)
+
+    def test_cadastro_data_entrada_futura_falha(self):
+        """Nova regra (pesquisa de UX): não deve aceitar data de entrada no futuro."""
+        futura = date.today() + timedelta(days=10)
+        dados = {**APARELHO_VALIDO, "data_entrada": futura.strftime("%d-%m-%Y")}
+        with pytest.raises(ValueError, match="futura"):
             cadastrar_aparelho(dados)
 
 
@@ -195,9 +204,21 @@ class TestEditarAparelho:
         assert resultado["data_saida"] is None
 
     def test_editar_data_saida_valida(self):
-        ap = cadastrar_aparelho(APARELHO_VALIDO)
-        resultado = editar_aparelho(ap["id"], {"data_saida": "10-06-2025"})
-        assert resultado["data_saida"] == "2025-06-10"
+        # entrada no passado (30 dias atrás) e saída mais recente (5 dias atrás),
+        # datas relativas a hoje para não depender de quando o teste é executado
+        entrada = date.today() - timedelta(days=30)
+        saida = date.today() - timedelta(days=5)
+        ap = cadastrar_aparelho({**APARELHO_VALIDO, "data_entrada": entrada.strftime("%d-%m-%Y")})
+        resultado = editar_aparelho(ap["id"], {"data_saida": saida.strftime("%d-%m-%Y")})
+        assert resultado["data_saida"] == saida.isoformat()
+
+    def test_editar_data_saida_anterior_a_entrada_falha(self):
+        """Nova regra (pesquisa de UX): saída não pode ser antes da entrada."""
+        entrada = date.today() - timedelta(days=5)
+        saida = date.today() - timedelta(days=30)
+        ap = cadastrar_aparelho({**APARELHO_VALIDO, "data_entrada": entrada.strftime("%d-%m-%Y")})
+        with pytest.raises(ValueError, match="anterior"):
+            editar_aparelho(ap["id"], {"data_saida": saida.strftime("%d-%m-%Y")})
 
 
 class TestExcluirAparelho:
@@ -324,6 +345,13 @@ class TestCadastrarPeca:
         with pytest.raises(ValueError):
             cadastrar_peca(dados)
 
+    def test_cadastro_data_entrada_futura_falha(self):
+        """Nova regra (pesquisa de UX): não deve aceitar data de entrada no futuro."""
+        futura = date.today() + timedelta(days=10)
+        dados = {**PECA_VALIDA, "data_entrada": futura.strftime("%d-%m-%Y")}
+        with pytest.raises(ValueError, match="futura"):
+            cadastrar_peca(dados)
+
 
 class TestEditarPeca:
     def test_editar_nome(self):
@@ -374,9 +402,21 @@ class TestEditarPeca:
             editar_peca(peca["id"], {"nome": ""})
 
     def test_editar_data_saida_valida(self):
-        peca = cadastrar_peca(PECA_VALIDA)
-        resultado = editar_peca(peca["id"], {"data_saida": "15-03-2025"})
-        assert resultado["data_saida"] == "2025-03-15"
+        # entrada no passado (30 dias atrás) e saída mais recente (5 dias atrás),
+        # datas relativas a hoje para não depender de quando o teste é executado
+        entrada = date.today() - timedelta(days=30)
+        saida = date.today() - timedelta(days=5)
+        peca = cadastrar_peca({**PECA_VALIDA, "data_entrada": entrada.strftime("%d-%m-%Y")})
+        resultado = editar_peca(peca["id"], {"data_saida": saida.strftime("%d-%m-%Y")})
+        assert resultado["data_saida"] == saida.isoformat()
+
+    def test_editar_data_saida_anterior_a_entrada_falha(self):
+        """Nova regra (pesquisa de UX): saída não pode ser antes da entrada."""
+        entrada = date.today() - timedelta(days=5)
+        saida = date.today() - timedelta(days=30)
+        peca = cadastrar_peca({**PECA_VALIDA, "data_entrada": entrada.strftime("%d-%m-%Y")})
+        with pytest.raises(ValueError, match="anterior"):
+            editar_peca(peca["id"], {"data_saida": saida.strftime("%d-%m-%Y")})
 
 
 class TestExcluirPeca:

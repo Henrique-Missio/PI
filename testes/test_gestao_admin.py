@@ -44,7 +44,11 @@ ADMIN_BASE = {
 VOLUNTARIO_B = {
     **VOLUNTARIO_BASE,
     "nome_completo":    "Carlos Voluntário",
-    "cpf":              "85249637010",
+    # NOTA: "85249637010" foi trocado por "85249637000" porque o valor antigo
+    # tinha 11 dígitos mas não era um CPF matematicamente válido (dígitos
+    # verificadores incorretos). Com a validação real de CPF (item 3 da
+    # pesquisa de UX) esse valor passou a ser rejeitado por cadastrar_usuario.
+    "cpf":              "85249637000",
     "email_pessoal":    "carlos@teste.com",
 }
 
@@ -161,6 +165,12 @@ class TestCadastroVoluntarioPeloAdmin:
     def test_campo_obrigatorio_ausente_falha(self):
         dados = {**VOLUNTARIO_BASE, "nome_completo": ""}
         with pytest.raises(ValueError, match="nome_completo"):
+            cadastrar_usuario(dados, tipo="voluntario")
+
+    def test_cpf_invalido_falha(self):
+        """CPF com 11 dígitos mas dígitos verificadores incorretos deve falhar."""
+        dados = {**VOLUNTARIO_BASE, "cpf": "12345678900", "email_pessoal": "outro2@teste.com"}
+        with pytest.raises(ValueError, match="CPF"):
             cadastrar_usuario(dados, tipo="voluntario")
 
 

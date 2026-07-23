@@ -5,17 +5,25 @@ from app.database import SessionLocal
 from app.models import Pecas, Estoque, Aparelhos, Pessoa, Pessoa_fisica, Endereco, Email, Telefone
 
 
-def _texto_obrigatorio(valor, campo):
+def _texto_obrigatorio(valor, campo, max_len=None):
     if valor is None or str(valor).strip() == "":
         raise ValueError(f"O campo '{campo}' é obrigatório.")
-    return str(valor).strip()
+    texto = str(valor).strip()
+    if max_len and len(texto) > max_len:
+        raise ValueError(
+            f"O campo '{campo}' deve ter no máximo {max_len} caracteres.")
+    return texto
 
 
-def _texto_opcional(valor):
+def _texto_opcional(valor, max_len=None):
     if valor is None:
         return None
     texto = str(valor).strip()
-    return texto or None
+    if not texto:
+        return None
+    if max_len and len(texto) > max_len:
+        raise ValueError(f"O campo excede o limite de {max_len} caracteres.")
+    return texto
 
 
 def _converter_data(valor, campo):
@@ -25,7 +33,37 @@ def _converter_data(valor, campo):
     try:
         return date(*(int(x) for x in reversed(str(valor).strip().split("-"))))
     except ValueError:
-        raise ValueError(f"O campo '{campo}' deve estar no formato DD-MM-AAAA.")
+        raise ValueError(
+            f"O campo '{campo}' deve estar no formato DD-MM-AAAA.")
+
+
+def _validar_datas_estoque(data_entrada, data_saida):
+    """Regras de negócio para datas de itens do estoque (aparelhos e peças):
+    - a data de entrada não pode ser no futuro.
+    - a data de saída não pode ser anterior à data de entrada.
+    """
+    if data_entrada and data_entrada > date.today():
+        raise ValueError("A data de entrada não pode ser uma data futura.")
+    if data_saida and data_entrada and data_saida < data_entrada:
+        raise ValueError(
+            "A data de saída não pode ser anterior à data de entrada.")
+
+
+def validar_cpf(cpf: str) -> bool:
+    """Valida CPF pelo algoritmo oficial de dígitos verificadores.
+    Aceita string com ou sem máscara; retorna False para None/valores inválidos.
+    """
+    if not cpf:
+        return False
+    nums = "".join(c for c in str(cpf) if c.isdigit())
+    if len(nums) != 11 or len(set(nums)) == 1:
+        return False
+    for i in range(2):
+        soma = sum(int(nums[j]) * (10 + i - j) for j in range(9 + i))
+        digito = (soma * 10 % 11) % 10
+        if digito != int(nums[9 + i]):
+            return False
+    return True
 
 
 # ──────────────────────────────────────────
@@ -62,34 +100,47 @@ def login(dados):
 
 
 def cadastrar_usuario(dados, tipo="voluntario"):
-    nome_completo        = _texto_obrigatorio(dados.get("nome_completo"),        "nome_completo")
-    cpf                  = _texto_obrigatorio(dados.get("cpf"),                  "cpf")
-    funcao               = _texto_obrigatorio(dados.get("funcao"),               "funcao")
-    email_pessoal        = _texto_obrigatorio(dados.get("email_pessoal"),        "email_pessoal")
-    telefone_celular     = _texto_obrigatorio(dados.get("telefone_celular"),     "telefone_celular")
-    cep                  = _texto_obrigatorio(dados.get("cep"),                  "cep")
-    rua                  = _texto_obrigatorio(dados.get("rua"),                  "rua")
-    numero               = _texto_obrigatorio(dados.get("numero"),               "numero")
-    bairro               = _texto_obrigatorio(dados.get("bairro"),               "bairro")
-    cidade               = _texto_obrigatorio(dados.get("cidade"),               "cidade")
-    estado               = _texto_obrigatorio(dados.get("estado"),               "estado")
-    senha                = _texto_obrigatorio(dados.get("senha"),                "senha")
-    data_nasc            = _converter_data(dados.get("data_nasc"),               "data_nasc")
+    nome_completo = _texto_obrigatorio(
+        dados.get("nome_completo"),        "nome_completo", max_len=60)
+    cpf = _texto_obrigatorio(dados.get("cpf"),                  "cpf")
+    funcao = _texto_obrigatorio(dados.get("funcao"),
+                                "funcao", max_len=20)
+    email_pessoal = _texto_obrigatorio(
+        dados.get("email_pessoal"), "email_pessoal", max_len=100)
+    telefone_celular = _texto_obrigatorio(
+        dados.get("telefone_celular"),     "telefone_celular")
+    cep = _texto_obrigatorio(dados.get("cep"),                  "cep")
+    rua = _texto_obrigatorio(dados.get("rua"),
+                            "rua", max_len=60)
+    numero = _texto_obrigatorio(dados.get("numero"),
+                                "numero", max_len=10)
+    bairro = _texto_obrigatorio(dados.get("bairro"),
+                                "bairro", max_len=40)
+    cidade = _texto_obrigatorio(dados.get("cidade"),
+                                "cidade", max_len=40)
+    estado = _texto_obrigatorio(dados.get("estado"),
+                                "estado", max_len=30)
+    senha = _texto_obrigatorio(dados.get("senha"),                "senha")
+    data_nasc = _converter_data(
+        dados.get("data_nasc"),               "data_nasc")
 
     # campos opcionais
-    complemento          = _texto_opcional(dados.get("complemento"))
-    email_juridico       = _texto_opcional(dados.get("email_juridico"))
+    complemento = _texto_opcional(dados.get("complemento"), max_len=60)
+    email_juridico = _texto_opcional(dados.get("email_juridico"), max_len=40)
     telefone_corporativo = _texto_opcional(dados.get("telefone_corporativo"))
-    telefone_fixo        = _texto_opcional(dados.get("telefone_fixo"))
+    telefone_fixo = _texto_opcional(dados.get("telefone_fixo"))
 
-    if not cpf.isdigit() or len(cpf) != 11:
-        raise ValueError("CPF inválido. Use apenas 11 números.")
+    if not validar_cpf(cpf):
+        raise ValueError("CPF inválido.")
+    cpf = "".join(c for c in cpf if c.isdigit())
     if not telefone_celular.isdigit() or len(telefone_celular) not in [10, 11]:
         raise ValueError("Telefone inválido. Use apenas números com DDD.")
     if not cep.isdigit() or len(cep) != 8:
         raise ValueError("CEP inválido. Use apenas 8 números.")
     if len(senha) < 6:
         raise ValueError("A senha deve ter pelo menos 6 caracteres.")
+    if len(senha) > 72:
+        raise ValueError("A senha deve ter no máximo 72 caracteres.")
     if tipo not in ["administrador", "voluntario"]:
         raise ValueError("Tipo inválido.")
 
@@ -178,7 +229,8 @@ def excluir_usuario(pessoa_id):
 def listar_aparelhos():
     session = SessionLocal()
     try:
-        linhas = session.scalars(select(Aparelhos).order_by(Aparelhos.id)).all()
+        linhas = session.scalars(
+            select(Aparelhos).order_by(Aparelhos.id)).all()
         return [a.to_dict() for a in linhas]
     finally:
         session.close()
@@ -196,13 +248,19 @@ def buscar_aparelho_por_id(aparelho_id):
 
 
 def cadastrar_aparelho(dados):
-    nome         = _texto_obrigatorio(dados.get("nome"),        "nome")
-    marca        = _texto_obrigatorio(dados.get("marca"),       "marca")
-    informacoes  = _texto_obrigatorio(dados.get("informacoes"), "informacoes")
-    problema     = _texto_obrigatorio(dados.get("problema"),    "problema")
-    status       = _texto_obrigatorio(dados.get("status"),      "status")
-    data_entrada = _converter_data(dados["data_entrada"], "data_entrada") if dados.get("data_entrada") else date.today()
-    data_saida   = _converter_data(dados["data_saida"],   "data_saida")   if dados.get("data_saida")   else None
+    nome = _texto_obrigatorio(dados.get("nome"),        "nome", max_len=120)
+    marca = _texto_obrigatorio(dados.get("marca"),       "marca", max_len=40)
+    informacoes = _texto_obrigatorio(
+        dados.get("informacoes"), "informacoes", max_len=1500)
+    problema = _texto_obrigatorio(
+        dados.get("problema"),    "problema", max_len=500)
+    status = _texto_obrigatorio(dados.get("status"),      "status", max_len=30)
+    data_entrada = _converter_data(dados["data_entrada"], "data_entrada") if dados.get(
+        "data_entrada") else date.today()
+    data_saida = _converter_data(
+        dados["data_saida"],   "data_saida") if dados.get("data_saida") else None
+
+    _validar_datas_estoque(data_entrada, data_saida)
 
     session = SessionLocal()
     try:
@@ -234,13 +292,29 @@ def editar_aparelho(aparelho_id, dados):
         if aparelho is None:
             raise ValueError(f"Aparelho com id {aparelho_id} não encontrado.")
 
-        if "nome"        in dados: aparelho.nome        = _texto_obrigatorio(dados["nome"],        "nome")
-        if "marca"       in dados: aparelho.marca       = _texto_obrigatorio(dados["marca"],       "marca")
-        if "informacoes" in dados: aparelho.informacoes = _texto_obrigatorio(dados["informacoes"], "informacoes")
-        if "problema"    in dados: aparelho.problema    = _texto_obrigatorio(dados["problema"],    "problema")
-        if "status"      in dados: aparelho.status      = _texto_obrigatorio(dados["status"],      "status")
-        if "data_entrada"in dados: aparelho.data_entrada= _converter_data(dados["data_entrada"],   "data_entrada")
-        if "data_saida"  in dados: aparelho.data_saida  = _converter_data(dados["data_saida"],     "data_saida") if dados["data_saida"] else None
+        if "nome" in dados:
+            aparelho.nome = _texto_obrigatorio(
+                dados["nome"],        "nome", max_len=120)
+        if "marca" in dados:
+            aparelho.marca = _texto_obrigatorio(
+                dados["marca"],       "marca", max_len=40)
+        if "informacoes" in dados:
+            aparelho.informacoes = _texto_obrigatorio(
+                dados["informacoes"], "informacoes", max_len=1500)
+        if "problema" in dados:
+            aparelho.problema = _texto_obrigatorio(
+                dados["problema"],    "problema", max_len=500)
+        if "status" in dados:
+            aparelho.status = _texto_obrigatorio(
+                dados["status"],      "status", max_len=30)
+        if "data_entrada" in dados:
+            aparelho.data_entrada = _converter_data(
+                dados["data_entrada"],   "data_entrada")
+        if "data_saida" in dados:
+            aparelho.data_saida = _converter_data(
+                dados["data_saida"],     "data_saida") if dados["data_saida"] else None
+
+        _validar_datas_estoque(aparelho.data_entrada, aparelho.data_saida)
 
         session.commit()
         session.refresh(aparelho)
@@ -293,13 +367,18 @@ def buscar_peca_por_id(peca_id):
 
 
 def cadastrar_peca(dados):
-    nome         = _texto_obrigatorio(dados.get("nome"),        "nome")
-    marca        = _texto_obrigatorio(dados.get("marca"),       "marca")
-    informacoes  = _texto_obrigatorio(dados.get("informacoes"), "informacoes")
-    problema     = _texto_opcional(dados.get("problema"))
-    status       = _texto_obrigatorio(dados.get("status"),      "status")
-    data_entrada = _converter_data(dados["data_entrada"], "data_entrada") if dados.get("data_entrada") else date.today()
-    data_saida   = _converter_data(dados["data_saida"],   "data_saida")   if dados.get("data_saida")   else None
+    nome = _texto_obrigatorio(dados.get("nome"),        "nome", max_len=120)
+    marca = _texto_obrigatorio(dados.get("marca"),       "marca", max_len=40)
+    informacoes = _texto_obrigatorio(
+        dados.get("informacoes"), "informacoes", max_len=1500)
+    problema = _texto_opcional(dados.get("problema"), max_len=500)
+    status = _texto_obrigatorio(dados.get("status"),      "status", max_len=30)
+    data_entrada = _converter_data(dados["data_entrada"], "data_entrada") if dados.get(
+        "data_entrada") else date.today()
+    data_saida = _converter_data(
+        dados["data_saida"],   "data_saida") if dados.get("data_saida") else None
+
+    _validar_datas_estoque(data_entrada, data_saida)
 
     session = SessionLocal()
     try:
@@ -331,13 +410,28 @@ def editar_peca(peca_id, dados):
         if peca is None:
             raise ValueError(f"Peça com id {peca_id} não encontrada.")
 
-        if "nome"        in dados: peca.nome        = _texto_obrigatorio(dados["nome"],        "nome")
-        if "marca"       in dados: peca.marca       = _texto_obrigatorio(dados["marca"],       "marca")
-        if "informacoes" in dados: peca.informacoes = _texto_obrigatorio(dados["informacoes"], "informacoes")
-        if "problema"    in dados: peca.problema    = _texto_opcional(dados["problema"])
-        if "status"      in dados: peca.status      = _texto_obrigatorio(dados["status"],      "status")
-        if "data_entrada"in dados: peca.data_entrada= _converter_data(dados["data_entrada"],   "data_entrada")
-        if "data_saida"  in dados: peca.data_saida  = _converter_data(dados["data_saida"],     "data_saida") if dados["data_saida"] else None
+        if "nome" in dados:
+            peca.nome = _texto_obrigatorio(
+                dados["nome"],        "nome", max_len=120)
+        if "marca" in dados:
+            peca.marca = _texto_obrigatorio(
+                dados["marca"],       "marca", max_len=40)
+        if "informacoes" in dados:
+            peca.informacoes = _texto_obrigatorio(
+                dados["informacoes"], "informacoes", max_len=1500)
+        if "problema" in dados:
+            peca.problema = _texto_opcional(dados["problema"], max_len=500)
+        if "status" in dados:
+            peca.status = _texto_obrigatorio(
+                dados["status"],      "status", max_len=30)
+        if "data_entrada" in dados:
+            peca.data_entrada = _converter_data(
+                dados["data_entrada"],   "data_entrada")
+        if "data_saida" in dados:
+            peca.data_saida = _converter_data(
+                dados["data_saida"],     "data_saida") if dados["data_saida"] else None
+
+        _validar_datas_estoque(peca.data_entrada, peca.data_saida)
 
         session.commit()
         session.refresh(peca)
@@ -383,7 +477,8 @@ def buscar_estoque_por_id(estoque_id):
     try:
         estoque = session.get(Estoque, estoque_id)
         if estoque is None:
-            raise ValueError(f"Item de estoque com id {estoque_id} não encontrado.")
+            raise ValueError(
+                f"Item de estoque com id {estoque_id} não encontrado.")
         return estoque.to_dict()
     finally:
         session.close()
@@ -391,7 +486,8 @@ def buscar_estoque_por_id(estoque_id):
 # ──────────────────────────────────────────
 # PERFIL — somente leitura
 # ──────────────────────────────────────────
-        
+
+
 def buscar_perfil(pessoa_id):
     session = SessionLocal()
     try:
@@ -409,27 +505,27 @@ def buscar_perfil(pessoa_id):
         email = session.scalars(
             select(Email).where(Email.id_pessoa == pessoa_id)
         ).first()
-        dados["email_pessoal"]  = email.email_pessoal  if email else None
+        dados["email_pessoal"] = email.email_pessoal if email else None
         dados["email_juridico"] = email.email_juridico if email else None
 
         telefone = session.scalars(
             select(Telefone).where(Telefone.id_pessoa == pessoa_id)
         ).first()
-        dados["telefone_celular"]     = telefone.telefone_celular     if telefone else None
+        dados["telefone_celular"] = telefone.telefone_celular if telefone else None
         dados["telefone_corporativo"] = telefone.telefone_corporativo if telefone else None
-        dados["telefone_fixo"]        = telefone.telefone_fixo        if telefone else None
+        dados["telefone_fixo"] = telefone.telefone_fixo if telefone else None
 
         endereco = session.scalars(
             select(Endereco).where(Endereco.id_pessoa == pessoa_id)
         ).first()
         if endereco:
-            dados["cep"]         = endereco.cep
-            dados["rua"]         = endereco.rua
-            dados["numero"]      = endereco.numero
+            dados["cep"] = endereco.cep
+            dados["rua"] = endereco.rua
+            dados["numero"] = endereco.numero
             dados["complemento"] = endereco.complemento
-            dados["bairro"]      = endereco.bairro
-            dados["cidade"]      = endereco.cidade
-            dados["estado"]      = endereco.estado
+            dados["bairro"] = endereco.bairro
+            dados["cidade"] = endereco.cidade
+            dados["estado"] = endereco.estado
 
         return dados
     finally:
@@ -444,9 +540,11 @@ def editar_perfil(pessoa_id, dados):
             raise ValueError(f"Usuário com id {pessoa_id} não encontrado.")
 
         if "nome_completo" in dados:
-            pessoa.nome_completo = _texto_obrigatorio(dados["nome_completo"], "nome_completo")
+            pessoa.nome_completo = _texto_obrigatorio(
+                dados["nome_completo"], "nome_completo", max_len=60)
         if "funcao" in dados:
-            pessoa.funcao = _texto_obrigatorio(dados["funcao"], "funcao")
+            pessoa.funcao = _texto_obrigatorio(
+                dados["funcao"], "funcao", max_len=20)
         if "data_nasc" in dados:
             pessoa.data_nasc = _converter_data(dados["data_nasc"], "data_nasc")
         if dados.get("senha"):
@@ -457,8 +555,9 @@ def editar_perfil(pessoa_id, dados):
         # CPF
         if "cpf" in dados:
             cpf = _texto_obrigatorio(dados["cpf"], "cpf")
-            if not cpf.isdigit() or len(cpf) != 11:
-                raise ValueError("CPF inválido. Use apenas 11 números.")
+            if not validar_cpf(cpf):
+                raise ValueError("CPF inválido.")
+            cpf = "".join(c for c in cpf if c.isdigit())
             cpf_existente = session.scalars(
                 select(Pessoa_fisica).where(
                     Pessoa_fisica.cpf == cpf, Pessoa_fisica.id_pessoa != pessoa_id
@@ -468,7 +567,8 @@ def editar_perfil(pessoa_id, dados):
                 raise ValueError("Este CPF já está cadastrado em outra conta.")
 
             pessoa_fisica = session.scalars(
-                select(Pessoa_fisica).where(Pessoa_fisica.id_pessoa == pessoa_id)
+                select(Pessoa_fisica).where(
+                    Pessoa_fisica.id_pessoa == pessoa_id)
             ).first()
             if pessoa_fisica:
                 pessoa_fisica.cpf = cpf
@@ -485,15 +585,18 @@ def editar_perfil(pessoa_id, dados):
                     )
                 ).first()
                 if email_existente:
-                    raise ValueError("Este e-mail já está em uso por outra conta.")
+                    raise ValueError(
+                        "Este e-mail já está em uso por outra conta.")
 
             email = session.scalars(
                 select(Email).where(Email.id_pessoa == pessoa_id)
             ).first()
             if email:
-                email.email_pessoal = _texto_opcional(dados.get("email_pessoal"))
+                email.email_pessoal = _texto_opcional(
+                    dados.get("email_pessoal"), max_len=40)
             else:
-                session.add(Email(email_pessoal=_texto_opcional(dados.get("email_pessoal")), id_pessoa=pessoa_id))
+                session.add(Email(email_pessoal=_texto_opcional(
+                    dados.get("email_pessoal"), max_len=40), id_pessoa=pessoa_id))
 
         # Telefone
         if "telefone_celular" in dados:
@@ -501,24 +604,40 @@ def editar_perfil(pessoa_id, dados):
                 select(Telefone).where(Telefone.id_pessoa == pessoa_id)
             ).first()
             if telefone:
-                telefone.telefone_celular = _texto_opcional(dados.get("telefone_celular"))
+                telefone.telefone_celular = _texto_opcional(
+                    dados.get("telefone_celular"))
             else:
-                session.add(Telefone(telefone_celular=_texto_opcional(dados.get("telefone_celular")), id_pessoa=pessoa_id))
+                session.add(Telefone(telefone_celular=_texto_opcional(
+                    dados.get("telefone_celular")), id_pessoa=pessoa_id))
 
         # Endereço
-        campos_endereco = ["cep", "rua", "numero", "complemento", "bairro", "cidade", "estado"]
+        campos_endereco = ["cep", "rua", "numero",
+                           "complemento", "bairro", "cidade", "estado"]
         if any(c in dados for c in campos_endereco):
             endereco = session.scalars(
                 select(Endereco).where(Endereco.id_pessoa == pessoa_id)
             ).first()
             if endereco:
-                if "cep"         in dados: endereco.cep         = _texto_obrigatorio(dados["cep"], "cep")
-                if "rua"         in dados: endereco.rua         = _texto_obrigatorio(dados["rua"], "rua")
-                if "numero"      in dados: endereco.numero      = _texto_obrigatorio(dados["numero"], "numero")
-                if "complemento" in dados: endereco.complemento = _texto_opcional(dados.get("complemento"))
-                if "bairro"      in dados: endereco.bairro      = _texto_obrigatorio(dados["bairro"], "bairro")
-                if "cidade"      in dados: endereco.cidade      = _texto_obrigatorio(dados["cidade"], "cidade")
-                if "estado"      in dados: endereco.estado      = _texto_obrigatorio(dados["estado"], "estado")
+                if "cep" in dados:
+                    endereco.cep = _texto_obrigatorio(dados["cep"], "cep")
+                if "rua" in dados:
+                    endereco.rua = _texto_obrigatorio(
+                        dados["rua"], "rua", max_len=60)
+                if "numero" in dados:
+                    endereco.numero = _texto_obrigatorio(
+                        dados["numero"], "numero", max_len=10)
+                if "complemento" in dados:
+                    endereco.complemento = _texto_opcional(
+                        dados.get("complemento"), max_len=60)
+                if "bairro" in dados:
+                    endereco.bairro = _texto_obrigatorio(
+                        dados["bairro"], "bairro", max_len=30)
+                if "cidade" in dados:
+                    endereco.cidade = _texto_obrigatorio(
+                        dados["cidade"], "cidade", max_len=30)
+                if "estado" in dados:
+                    endereco.estado = _texto_obrigatorio(
+                        dados["estado"], "estado", max_len=30)
 
         session.commit()
         session.refresh(pessoa)
@@ -528,445 +647,3 @@ def editar_perfil(pessoa_id, dados):
         raise
     finally:
         session.close()
-        
-# ──────────────────────────────────────────
-# PESSOA
-# ──────────────────────────────────────────
-
-# def listar_pessoas():
-#     session = SessionLocal()
-#     try:
-#         linhas = session.scalars(select(Pessoa).order_by(Pessoa.id)).all()
-#         return [p.to_dict() for p in linhas]
-#     finally:
-#         session.close()
-
-
-# def buscar_pessoa_por_id(pessoa_id):
-#     session = SessionLocal()
-#     try:
-#         pessoa = session.get(Pessoa, pessoa_id)
-#         if pessoa is None:
-#             raise ValueError(f"Pessoa com id {pessoa_id} não encontrada.")
-#         return pessoa.to_dict()
-#     finally:
-#         session.close()
-
-
-# def cadastrar_pessoa(dados):
-#     nome_completo = _texto_obrigatorio(dados.get("nome_completo"), "nome_completo")
-#     tipo          = _texto_obrigatorio(dados.get("tipo"),          "tipo")
-#     funcao        = _texto_obrigatorio(dados.get("funcao"),        "funcao")
-#     senha         = _texto_obrigatorio(dados.get("senha"),         "senha")
-#     data_nasc     = _converter_data(dados.get("data_nasc"),        "data_nasc")
-
-#     # tipo só pode ser administrador, voluntário ou usuário
-#     tipos_validos = ["administrador", "voluntario", "usuario"]
-#     if tipo.lower() not in tipos_validos:
-#         raise ValueError(f"Tipo inválido. Use: {', '.join(tipos_validos)}")
-
-#     # hash da senha antes de salvar — nunca salvar senha pura
-#     from werkzeug.security import generate_password_hash
-#     senha_hash = generate_password_hash(senha)
-
-#     session = SessionLocal()
-#     try:
-#         pessoa = Pessoa(
-#             nome_completo=nome_completo,
-#             tipo=tipo.lower(),
-#             funcao=funcao,
-#             senha=senha_hash,
-#             data_nasc=data_nasc
-#         )
-#         session.add(pessoa)
-#         session.commit()
-#         session.refresh(pessoa)
-#         return pessoa.to_dict()
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# def editar_pessoa(pessoa_id, dados):
-#     session = SessionLocal()
-#     try:
-#         pessoa = session.get(Pessoa, pessoa_id)
-#         if pessoa is None:
-#             raise ValueError(f"Pessoa com id {pessoa_id} não encontrada.")
-
-#         if "nome_completo" in dados: pessoa.nome_completo = _texto_obrigatorio(dados["nome_completo"], "nome_completo")
-#         if "tipo"          in dados: pessoa.tipo          = _texto_obrigatorio(dados["tipo"],          "tipo")
-#         if "funcao"        in dados: pessoa.funcao        = _texto_obrigatorio(dados["funcao"],        "funcao")
-#         if "data_nasc"     in dados: pessoa.data_nasc     = _converter_data(dados["data_nasc"],        "data_nasc")
-#         if "senha"         in dados:
-#             from werkzeug.security import generate_password_hash
-#             pessoa.senha = generate_password_hash(_texto_obrigatorio(dados["senha"], "senha"))
-
-#         session.commit()
-#         session.refresh(pessoa)
-#         return pessoa.to_dict()
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# def excluir_pessoa(pessoa_id):
-#     session = SessionLocal()
-#     try:
-#         pessoa = session.get(Pessoa, pessoa_id)
-#         if pessoa is None:
-#             raise ValueError(f"Pessoa com id {pessoa_id} não encontrada.")
-#         session.delete(pessoa)
-#         session.commit()
-#         return {"mensagem": f"Pessoa {pessoa_id} excluída com sucesso."}
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# ──────────────────────────────────────────
-# PESSOA FÍSICA
-# ──────────────────────────────────────────
-
-# def cadastrar_pessoa_fisica(dados):
-#     id_pessoa = dados.get("id_pessoa")
-#     cpf       = _texto_obrigatorio(dados.get("cpf"), "cpf")
-
-#     if not id_pessoa:
-#         raise ValueError("O campo 'id_pessoa' é obrigatório.")
-
-#     # valida formato do CPF (só números, 11 dígitos)
-#     if not cpf.isdigit() or len(cpf) != 11:
-#         raise ValueError("CPF inválido. Informe apenas os 11 números sem pontos ou traços.")
-
-#     session = SessionLocal()
-#     try:
-#         if session.get(Pessoa, int(id_pessoa)) is None:
-#             raise ValueError(f"Pessoa com id {id_pessoa} não encontrada.")
-
-#         pessoa_fisica = Pessoa_fisica(
-#             cpf=cpf,
-#             id_pessoa=int(id_pessoa)
-#         )
-#         session.add(pessoa_fisica)
-#         session.commit()
-#         session.refresh(pessoa_fisica)
-#         return pessoa_fisica.to_dict()
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# def excluir_pessoa_fisica(pessoa_fisica_id):
-#     session = SessionLocal()
-#     try:
-#         pessoa_fisica = session.get(Pessoa_fisica, pessoa_fisica_id)
-#         if pessoa_fisica is None:
-#             raise ValueError(f"Pessoa física com id {pessoa_fisica_id} não encontrada.")
-#         session.delete(pessoa_fisica)
-#         session.commit()
-#         return {"mensagem": f"Pessoa física {pessoa_fisica_id} excluída com sucesso."}
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# ──────────────────────────────────────────
-# PESSOA JURÍDICA
-# ──────────────────────────────────────────
-
-# def cadastrar_pessoa_juridica(dados):
-#     id_pessoa         = dados.get("id_pessoa")
-#     cnpj              = _texto_obrigatorio(dados.get("cnpj"),              "cnpj")
-#     nome_fantasia     = _texto_obrigatorio(dados.get("nome_fantasia"),     "nome_fantasia")
-#     razao_social      = _texto_obrigatorio(dados.get("razao_social"),      "razao_social")
-#     inscricao_estadual= _texto_obrigatorio(dados.get("inscricao_estadual"),"inscricao_estadual")
-
-#     if not id_pessoa:
-#         raise ValueError("O campo 'id_pessoa' é obrigatório.")
-
-#     # valida formato do CNPJ (só números, 14 dígitos)
-#     if not cnpj.isdigit() or len(cnpj) != 14:
-#         raise ValueError("CNPJ inválido. Informe apenas os 14 números sem pontos, traços ou barras.")
-
-#     session = SessionLocal()
-#     try:
-#         if session.get(Pessoa, int(id_pessoa)) is None:
-#             raise ValueError(f"Pessoa com id {id_pessoa} não encontrada.")
-
-#         pessoa_juridica = Pessoa_juridica(
-#             cnpj=cnpj,
-#             nome_fantasia=nome_fantasia,
-#             razao_social=razao_social,
-#             inscricao_estadual=inscricao_estadual,
-#             id_pessoa=int(id_pessoa)
-#         )
-#         session.add(pessoa_juridica)
-#         session.commit()
-#         session.refresh(pessoa_juridica)
-#         return pessoa_juridica.to_dict()
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# def excluir_pessoa_juridica(pessoa_juridica_id):
-#     session = SessionLocal()
-#     try:
-#         pessoa_juridica = session.get(Pessoa_juridica, pessoa_juridica_id)
-#         if pessoa_juridica is None:
-#             raise ValueError(f"Pessoa jurídica com id {pessoa_juridica_id} não encontrada.")
-#         session.delete(pessoa_juridica)
-#         session.commit()
-#         return {"mensagem": f"Pessoa jurídica {pessoa_juridica_id} excluída com sucesso."}
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# ──────────────────────────────────────────
-# ENDEREÇO
-# ──────────────────────────────────────────
-
-# def cadastrar_endereco(dados):
-#     id_pessoa = dados.get("id_pessoa")
-#     cep       = _texto_obrigatorio(dados.get("cep"),    "cep")
-#     rua       = _texto_obrigatorio(dados.get("rua"),    "rua")
-#     bairro    = _texto_obrigatorio(dados.get("bairro"), "bairro")
-#     cidade    = _texto_obrigatorio(dados.get("cidade"), "cidade")
-#     estado    = _texto_obrigatorio(dados.get("estado"), "estado")
-
-#     if not id_pessoa:
-#         raise ValueError("O campo 'id_pessoa' é obrigatório.")
-
-#     if not cep.isdigit() or len(cep) != 8:
-#         raise ValueError("CEP inválido. Informe apenas os 8 números sem traço.")
-
-#     session = SessionLocal()
-#     try:
-#         if session.get(Pessoa, int(id_pessoa)) is None:
-#             raise ValueError(f"Pessoa com id {id_pessoa} não encontrada.")
-
-#         endereco = Endereco(
-#             cep=cep, rua=rua, bairro=bairro,
-#             cidade=cidade, estado=estado,
-#             id_pessoa=int(id_pessoa)
-#         )
-#         session.add(endereco)
-#         session.commit()
-#         session.refresh(endereco)
-#         return endereco.to_dict()
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# def editar_endereco(endereco_id, dados):
-#     session = SessionLocal()
-#     try:
-#         endereco = session.get(Endereco, endereco_id)
-#         if endereco is None:
-#             raise ValueError(f"Endereço com id {endereco_id} não encontrado.")
-
-#         if "cep"    in dados: endereco.cep    = _texto_obrigatorio(dados["cep"],    "cep")
-#         if "rua"    in dados: endereco.rua    = _texto_obrigatorio(dados["rua"],    "rua")
-#         if "bairro" in dados: endereco.bairro = _texto_obrigatorio(dados["bairro"], "bairro")
-#         if "cidade" in dados: endereco.cidade = _texto_obrigatorio(dados["cidade"], "cidade")
-#         if "estado" in dados: endereco.estado = _texto_obrigatorio(dados["estado"], "estado")
-
-#         session.commit()
-#         session.refresh(endereco)
-#         return endereco.to_dict()
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# def excluir_endereco(endereco_id):
-#     session = SessionLocal()
-#     try:
-#         endereco = session.get(Endereco, endereco_id)
-#         if endereco is None:
-#             raise ValueError(f"Endereço com id {endereco_id} não encontrado.")
-#         session.delete(endereco)
-#         session.commit()
-#         return {"mensagem": f"Endereço {endereco_id} excluído com sucesso."}
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# ──────────────────────────────────────────
-# EMAIL
-# ──────────────────────────────────────────
-
-# def cadastrar_email(dados):
-#     id_pessoa      = dados.get("id_pessoa")
-#     email_pessoal  = _texto_opcional(dados.get("email_pessoal"))
-#     email_juridico = _texto_opcional(dados.get("email_juridico"))
-
-#     if not id_pessoa:
-#         raise ValueError("O campo 'id_pessoa' é obrigatório.")
-
-#     # pelo menos um email tem que ser informado
-#     if not email_pessoal and not email_juridico:
-#         raise ValueError("Informe pelo menos um email (pessoal ou jurídico).")
-
-#     session = SessionLocal()
-#     try:
-#         if session.get(Pessoa, int(id_pessoa)) is None:
-#             raise ValueError(f"Pessoa com id {id_pessoa} não encontrada.")
-
-#         email = Email(
-#             email_pessoal=email_pessoal,
-#             email_juridico=email_juridico,
-#             id_pessoa=int(id_pessoa)
-#         )
-#         session.add(email)
-#         session.commit()
-#         session.refresh(email)
-#         return email.to_dict()
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# def editar_email(email_id, dados):
-#     session = SessionLocal()
-#     try:
-#         email = session.get(Email, email_id)
-#         if email is None:
-#             raise ValueError(f"Email com id {email_id} não encontrado.")
-
-#         if "email_pessoal"  in dados: email.email_pessoal  = _texto_opcional(dados["email_pessoal"])
-#         if "email_juridico" in dados: email.email_juridico = _texto_opcional(dados["email_juridico"])
-
-#         session.commit()
-#         session.refresh(email)
-#         return email.to_dict()
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# def excluir_email(email_id):
-#     session = SessionLocal()
-#     try:
-#         email = session.get(Email, email_id)
-#         if email is None:
-#             raise ValueError(f"Email com id {email_id} não encontrado.")
-#         session.delete(email)
-#         session.commit()
-#         return {"mensagem": f"Email {email_id} excluído com sucesso."}
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# ──────────────────────────────────────────
-# TELEFONE
-# ──────────────────────────────────────────
-
-# def cadastrar_telefone(dados):
-#     id_pessoa           = dados.get("id_pessoa")
-#     telefone_celular    = _texto_opcional(dados.get("telefone_celular"))
-#     telefone_corporativo= _texto_opcional(dados.get("telefone_corporativo"))
-#     telefone_fixo       = _texto_opcional(dados.get("telefone_fixo"))
-
-#     if not id_pessoa:
-#         raise ValueError("O campo 'id_pessoa' é obrigatório.")
-
-#     # pelo menos um telefone tem que ser informado
-#     if not telefone_celular and not telefone_corporativo and not telefone_fixo:
-#         raise ValueError("Informe pelo menos um telefone.")
-
-#     # valida que os informados têm só números e 11 dígitos (celular) ou 10 (fixo)
-#     for campo, valor in [("telefone_celular", telefone_celular),
-#                          ("telefone_corporativo", telefone_corporativo),
-#                          ("telefone_fixo", telefone_fixo)]:
-#         if valor and (not valor.isdigit() or len(valor) not in [10, 11]):
-#             raise ValueError(f"{campo} inválido. Informe apenas números com DDD (10 ou 11 dígitos).")
-
-#     session = SessionLocal()
-#     try:
-#         if session.get(Pessoa, int(id_pessoa)) is None:
-#             raise ValueError(f"Pessoa com id {id_pessoa} não encontrada.")
-
-#         telefone = Telefone(
-#             telefone_celular=telefone_celular,
-#             telefone_corporativo=telefone_corporativo,
-#             telefone_fixo=telefone_fixo,
-#             id_pessoa=int(id_pessoa)
-#         )
-#         session.add(telefone)
-#         session.commit()
-#         session.refresh(telefone)
-#         return telefone.to_dict()
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# def editar_telefone(telefone_id, dados):
-#     session = SessionLocal()
-#     try:
-#         telefone = session.get(Telefone, telefone_id)
-#         if telefone is None:
-#             raise ValueError(f"Telefone com id {telefone_id} não encontrado.")
-
-#         if "telefone_celular"     in dados: telefone.telefone_celular     = _texto_opcional(dados["telefone_celular"])
-#         if "telefone_corporativo" in dados: telefone.telefone_corporativo = _texto_opcional(dados["telefone_corporativo"])
-#         if "telefone_fixo"        in dados: telefone.telefone_fixo        = _texto_opcional(dados["telefone_fixo"])
-
-#         session.commit()
-#         session.refresh(telefone)
-#         return telefone.to_dict()
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()
-
-
-# def excluir_telefone(telefone_id):
-#     session = SessionLocal()
-#     try:
-#         telefone = session.get(Telefone, telefone_id)
-#         if telefone is None:
-#             raise ValueError(f"Telefone com id {telefone_id} não encontrado.")
-#         session.delete(telefone)
-#         session.commit()
-#         return {"mensagem": f"Telefone {telefone_id} excluído com sucesso."}
-#     except Exception:
-#         session.rollback()
-#         raise
-#     finally:
-#         session.close()

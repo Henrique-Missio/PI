@@ -64,16 +64,36 @@ document.getElementById("m-cep").addEventListener("input", (e) => {
 
 document.getElementById("m-cep").addEventListener("blur", async (e) => {
     const cep = e.target.value.replace(/\D/g, "");
-    if (cep.length !== 8) return;
+    if (cep.length === 0) return;
+
+    ["m-rua", "m-bairro", "m-cidade", "m-estado"].forEach(id => {
+        document.getElementById(id).value = "";
+    });
+
+    if (cep.length !== 8) {
+        mMensagem.textContent = "Digite os 8 números do CEP.";
+        mMensagem.className = "mensagem erro";
+        return;
+    }
+
     try {
         const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
         const d = await r.json();
-        if (d.erro) return;
+        if (d.erro) {
+            mMensagem.textContent = "CEP não encontrado.";
+            mMensagem.className = "mensagem erro";
+            return;
+        }
         document.getElementById("m-rua").value    = d.logradouro || "";
         document.getElementById("m-bairro").value = d.bairro || "";
         document.getElementById("m-cidade").value = d.localidade || "";
         document.getElementById("m-estado").value = d.uf || "";
-    } catch { /* silencioso */ }
+        mMensagem.textContent = "";
+        mMensagem.className = "mensagem";
+    } catch {
+        mMensagem.textContent = "Erro ao buscar CEP. Verifique sua conexão.";
+        mMensagem.className = "mensagem erro";
+    }
 });
 
 // ── Cadastrar voluntário ──

@@ -105,7 +105,7 @@ body {
   font-size: .85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background .15s, opacity .15s;
+  transition: background .15s, opacity .15s, box-shadow .15s, transform .1s;
   white-space: nowrap;
   text-decoration: none;
 }
@@ -123,13 +123,23 @@ body {
   cursor: not-allowed;
 }
 
+/* Botões primários mais chamativos: sombra sutil colorida + leve destaque no hover/active,
+   sem depender de imagens (feedback do Pietro: "botões de adicionar poderiam ser mais chamativos") */
 .btn-primary {
   background: var(--accent);
   color: #fff;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, .35);
 }
 
 .btn-primary:hover {
   background: var(--accent-hover);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, .45);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, .35);
 }
 
 .btn-secondary {
@@ -347,6 +357,40 @@ tbody td {
 
 .td-secundario {
   color: var(--text-secondary);
+}
+
+/* Código de identificação do item (ex: AP-0007) */
+.td-codigo {
+  font-family: 'Space Grotesk', monospace;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+
+/* Coluna de ações (editar/excluir) na tabela de estoque */
+.th-acoes {
+  width: 90px;
+}
+
+.td-acoes {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Grupo de botões de ação na linha, sempre visíveis (não só no hover),
+   usando o mesmo estilo dos botões do rodapé do modal — só que compactos. */
+.acoes-linha {
+  display: inline-flex;
+  gap: .4rem;
+  justify-content: flex-end;
+}
+
+.btn-icone {
+  padding: .35rem .55rem;
+  line-height: 1;
+  font-size: .9rem;
 }
 
 /* ── Status badges ── */
@@ -782,6 +826,71 @@ tbody td {
     align-items: flex-start;
   }
 
+  .page-actions {
+    width: 100%;
+  }
+
+  .page-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* Telas bem pequenas (celulares): reduz padding dos cards de formulário
+   e evita que os campos "estourem" a largura da tela, problema relatado
+   na pesquisa de UX ao usar o modo responsivo. */
+@media (max-width: 480px) {
+  .form-page {
+    padding: 0 .75rem;
+    margin: 1rem auto;
+  }
+
+  .form-card-header,
+  .form-card-corpo,
+  .form-rodape {
+    padding: 1rem;
+  }
+
+  .form-rodape {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .75rem;
+  }
+
+  .form-rodape .btn,
+  .form-rodape>div {
+    width: 100%;
+  }
+
+  .form-rodape>div {
+    display: flex;
+    gap: .5rem;
+  }
+
+  .form-rodape>div .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .modal-caixa {
+    max-width: 100%;
+  }
+
+  .modal-corpo,
+  .modal-topo,
+  .modal-rodape {
+    padding: 1rem;
+  }
+
+  .auth-card {
+    max-width: 100%;
+  }
+
+  .auth-card-corpo,
+  .auth-card-header,
+  .auth-card-rodape {
+    padding: 1.25rem;
+  }
 }
 
 /* ── Avatar / Dropdown ── */
@@ -942,4 +1051,60 @@ tbody td {
   .relatorio-cards {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+@media (max-width: 480px) {
+  .relatorio-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.campo-senha-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.campo-senha-wrapper input {
+  flex: 1;
+  padding-right: 2.5rem;
+}
+
+.toggle-senha {
+  position: absolute;
+  right: .5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: .2rem .3rem;
+  line-height: 1;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-senha.ativo {
+  color: var(--accent);
+}
+
+.toggle-senha:hover {
+  color: var(--text-primary);
+}
+
+/* Remove o ícone nativo de "mostrar senha" do navegador (Edge/IE),
+   que duplicava o ícone customizado (.toggle-senha) */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+.contador-caracteres {
+  display: block;
+  text-align: right;
+  font-size: .72rem;
+  color: var(--text-muted);
+  margin-top: .25rem;
 }
