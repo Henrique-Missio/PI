@@ -66,9 +66,22 @@ def validar_cpf(cpf: str) -> bool:
     return True
 
 
+def validar_senha_forte(senha: str) -> bool:
+    """8+ chars, 1 maiuscula, 1 numero, 1 especial."""
+    if not senha or len(senha) < 8:
+        return False
+    if not any(c.isupper() for c in senha):
+        return False
+    if not any(c.isdigit() for c in senha):
+        return False
+    if not any(not c.isalnum() for c in senha):
+        return False
+    return True
+
 # ──────────────────────────────────────────
 # AUTENTICAÇÃO
 # ──────────────────────────────────────────
+
 
 def login(dados):
     email = _texto_obrigatorio(dados.get("email"), "email")
@@ -111,7 +124,7 @@ def cadastrar_usuario(dados, tipo="voluntario"):
         dados.get("telefone_celular"),     "telefone_celular")
     cep = _texto_obrigatorio(dados.get("cep"),                  "cep")
     rua = _texto_obrigatorio(dados.get("rua"),
-                            "rua", max_len=60)
+                             "rua", max_len=60)
     numero = _texto_obrigatorio(dados.get("numero"),
                                 "numero", max_len=10)
     bairro = _texto_obrigatorio(dados.get("bairro"),
@@ -137,8 +150,9 @@ def cadastrar_usuario(dados, tipo="voluntario"):
         raise ValueError("Telefone inválido. Use apenas números com DDD.")
     if not cep.isdigit() or len(cep) != 8:
         raise ValueError("CEP inválido. Use apenas 8 números.")
-    if len(senha) < 6:
-        raise ValueError("A senha deve ter pelo menos 6 caracteres.")
+    if not validar_senha_forte(senha):
+        raise ValueError(
+            "Senha fraca. Use 8+ caracteres, maiúscula, número e caractere especial.")
     if len(senha) > 72:
         raise ValueError("A senha deve ter no máximo 72 caracteres.")
     if tipo not in ["administrador", "voluntario"]:
@@ -548,8 +562,9 @@ def editar_perfil(pessoa_id, dados):
         if "data_nasc" in dados:
             pessoa.data_nasc = _converter_data(dados["data_nasc"], "data_nasc")
         if dados.get("senha"):
-            if len(dados["senha"]) < 6:
-                raise ValueError("A senha deve ter pelo menos 6 caracteres.")
+            if not validar_senha_forte(dados["senha"]):
+                raise ValueError(
+                    "Senha fraca. Use 8+ caracteres, maiúscula, número e caractere especial.")
             pessoa.senha = generate_password_hash(dados["senha"])
 
         # CPF

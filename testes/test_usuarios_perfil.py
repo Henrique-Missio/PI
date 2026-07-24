@@ -28,7 +28,7 @@ USUARIO_BASE = {
     "bairro":           "Centro",
     "cidade":           "Santa Cruz do Sul",
     "estado":           "RS",
-    "senha":            "senha123",
+    "senha":            "Senha@123",
     "data_nasc":        "15-03-1995",
 }
 
@@ -241,12 +241,12 @@ class TestEditarPerfil:
 
     def test_editar_senha_permite_novo_login(self, usuario_a):
         from app.servicos import login
-        editar_perfil(usuario_a["id"], {"senha": "novasenha456"})
-        resultado = login({"email": "ana@teste.com", "senha": "novasenha456"})
+        editar_perfil(usuario_a["id"], {"senha": "NovaSenha@456"})
+        resultado = login({"email": "ana@teste.com", "senha": "NovaSenha@456"})
         assert resultado["id"] == usuario_a["id"]
 
     def test_editar_senha_curta_falha(self, usuario_a):
-        with pytest.raises(ValueError, match="senha"):
+        with pytest.raises(ValueError, match="[Ss]enha"):
             editar_perfil(usuario_a["id"], {"senha": "abc"})
 
     def test_editar_cpf_duplicado_falha(self, usuario_a, usuario_b):

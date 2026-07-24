@@ -22,7 +22,7 @@ USUARIO_VALIDO = {
     "bairro":           "Centro",
     "cidade":           "Santa Cruz do Sul",
     "estado":           "RS",
-    "senha":            "senha123",
+    "senha":            "Senha@123",
     "data_nasc":        "10-05-2000",
 }
 
@@ -62,15 +62,15 @@ def usuario_cadastrado():
 class TestLoginCamposObrigatorios:
     def test_email_ausente_falha(self, usuario_cadastrado):
         with pytest.raises(ValueError, match="email"):
-            login({"senha": "senha123"})
+            login({"senha": "Senha@123"})
 
     def test_email_vazio_falha(self, usuario_cadastrado):
         with pytest.raises(ValueError, match="email"):
-            login({"email": "", "senha": "senha123"})
+            login({"email": "", "senha": "Senha@123"})
 
     def test_email_apenas_espacos_falha(self, usuario_cadastrado):
         with pytest.raises(ValueError, match="email"):
-            login({"email": "   ", "senha": "senha123"})
+            login({"email": "   ", "senha": "Senha@123"})
 
     def test_senha_ausente_falha(self, usuario_cadastrado):
         with pytest.raises(ValueError, match="senha"):
@@ -99,32 +99,32 @@ class TestLoginCamposObrigatorios:
 
 class TestLoginFluxoCompleto:
     def test_credenciais_corretas_retorna_dict(self, usuario_cadastrado):
-        resultado = login({"email": "joao@teste.com", "senha": "senha123"})
+        resultado = login({"email": "joao@teste.com", "senha": "Senha@123"})
         assert isinstance(resultado, dict)
 
     def test_retorna_id(self, usuario_cadastrado):
-        resultado = login({"email": "joao@teste.com", "senha": "senha123"})
+        resultado = login({"email": "joao@teste.com", "senha": "Senha@123"})
         assert "id" in resultado
 
     def test_retorna_nome_completo(self, usuario_cadastrado):
-        resultado = login({"email": "joao@teste.com", "senha": "senha123"})
+        resultado = login({"email": "joao@teste.com", "senha": "Senha@123"})
         assert resultado["nome_completo"] == "João da Silva"
 
     def test_retorna_tipo(self, usuario_cadastrado):
-        resultado = login({"email": "joao@teste.com", "senha": "senha123"})
+        resultado = login({"email": "joao@teste.com", "senha": "Senha@123"})
         assert resultado["tipo"] == "voluntario"
 
     def test_retorna_funcao(self, usuario_cadastrado):
-        resultado = login({"email": "joao@teste.com", "senha": "senha123"})
+        resultado = login({"email": "joao@teste.com", "senha": "Senha@123"})
         assert resultado["funcao"] == "tecnico"
 
     def test_nao_retorna_senha(self, usuario_cadastrado):
-        resultado = login({"email": "joao@teste.com", "senha": "senha123"})
+        resultado = login({"email": "joao@teste.com", "senha": "Senha@123"})
         assert "senha" not in resultado
 
     def test_login_admin_retorna_tipo_correto(self):
         cadastrar_usuario(USUARIO_VALIDO, tipo="administrador")
-        resultado = login({"email": "joao@teste.com", "senha": "senha123"})
+        resultado = login({"email": "joao@teste.com", "senha": "Senha@123"})
         assert resultado["tipo"] == "administrador"
 
 
@@ -139,7 +139,7 @@ class TestLoginCredenciaisIncorretas:
 
     def test_email_inexistente_falha(self, usuario_cadastrado):
         with pytest.raises(ValueError, match="incorretos"):
-            login({"email": "naoexiste@teste.com", "senha": "senha123"})
+            login({"email": "naoexiste@teste.com", "senha": "Senha@123"})
 
     def test_email_e_senha_errados_falha(self, usuario_cadastrado):
         with pytest.raises(ValueError, match="incorretos"):
@@ -155,7 +155,7 @@ class TestLoginCredenciaisIncorretas:
         a menos que o serviço normalize isso."""
         resultado_ou_erro = None
         try:
-            resultado_ou_erro = login({"email": " joao@teste.com ", "senha": "senha123"})
+            resultado_ou_erro = login({"email": " joao@teste.com ", "senha": "Senha@123"})
         except ValueError:
             resultado_ou_erro = "erro"
         # Aceitamos os dois comportamentos, mas o teste documenta o que acontece
@@ -165,7 +165,7 @@ class TestLoginCredenciaisIncorretas:
         from app.servicos import excluir_usuario
         excluir_usuario(usuario_cadastrado["id"])
         with pytest.raises(ValueError, match="incorretos"):
-            login({"email": "joao@teste.com", "senha": "senha123"})
+            login({"email": "joao@teste.com", "senha": "Senha@123"})
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -180,12 +180,12 @@ class TestLoginMultiplosUsuarios:
             "nome_completo": "Maria Souza",
             "cpf": "11144477735",
             "email_pessoal": "maria@teste.com",
-            "senha": "outrasenha",
+            "senha": "Outra@1234",
         }
         cadastrar_usuario(outro)
 
-        resultado_joao  = login({"email": "joao@teste.com",  "senha": "senha123"})
-        resultado_maria = login({"email": "maria@teste.com", "senha": "outrasenha"})
+        resultado_joao  = login({"email": "joao@teste.com",  "senha": "Senha@123"})
+        resultado_maria = login({"email": "maria@teste.com", "senha": "Outra@1234"})
 
         assert resultado_joao["nome_completo"]  == "João da Silva"
         assert resultado_maria["nome_completo"] == "Maria Souza"
@@ -198,10 +198,10 @@ class TestLoginMultiplosUsuarios:
             "nome_completo": "Maria Souza",
             "cpf": "11144477735",
             "email_pessoal": "maria@teste.com",
-            "senha": "outrasenha",
+            "senha": "Outra@1234",
         }
         cadastrar_usuario(outro)
 
         # tenta logar como Maria usando a senha do João
         with pytest.raises(ValueError, match="incorretos"):
-            login({"email": "maria@teste.com", "senha": "senha123"})
+            login({"email": "maria@teste.com", "senha": "Senha@123"})

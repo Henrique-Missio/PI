@@ -19,7 +19,8 @@
 
     <div class="page-wrapper">
         <div class="form-card" style="max-width: 700px; margin: 2rem auto;">
-            <div class="form-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem;">
+            <div class="form-card-header"
+                style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem;">
                 <div>
                     <div class="form-card-titulo">Gerenciar voluntários</div>
                     <div class="form-card-subtitulo">Voluntários cadastrados no sistema</div>
@@ -123,28 +124,57 @@
                     <div class="form-secao-titulo">Acesso</div>
                     <div class="form-grid-2">
                         <div class="campo">
-                            <label>Senha *</label>
-                            <input type="password" id="m-senha" placeholder="Mínimo 6 caracteres" />
+                            <label for="senha">Senha *</label>
+                            <div class="campo-senha-wrapper">
+                                <input type="password" id="m-senha" placeholder="Mínimo 8 caracteres" autocomplete="new-password"/>
+                                <button type="button" class="toggle-senha" data-target="senha"
+                                    aria-label="Mostrar senha">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <ul id="requisitos-senha-voluntario" class="requisitos-senha" style="display:none">
+                                <li data-requisito="tamanho"><span class="requisito-icone">✕</span> Mínimo 8 caracteres
+                                </li>
+                                <li data-requisito="maiuscula"><span class="requisito-icone">✕</span> Uma letra
+                                    maiúscula</li>
+                                <li data-requisito="numero"><span class="requisito-icone">✕</span> Um número</li>
+                                <li data-requisito="especial"><span class="requisito-icone">✕</span> Um caractere
+                                    especial</li>
+                            </ul>
                         </div>
                         <div class="campo">
-                            <label>Confirmar senha *</label>
-                            <input type="password" id="m-confirmar-senha" placeholder="Repita a senha" />
+                            <label for="senha">Confirmar senha *</label>
+                            <div class="campo-senha-wrapper">
+                                <input type="password" id="m-confirmar-senha" placeholder="Mínimo 8 caracteres" autocomplete="new-password"/>
+                                <button type="button" class="toggle-senha" data-target="senha"
+                                    aria-label="Mostrar senha">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-            </div>
-            <div class="modal-rodape" style="padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
-                <span id="m-mensagem" class="mensagem"></span>
-                <div style="display:flex; gap:.5rem;">
-                    <button class="btn btn-secondary-dark btn-sm" id="modal-cancelar">Cancelar</button>
-                    <button class="btn btn-primary btn-sm" id="modal-salvar">Cadastrar</button>
+                </div>
+                <div class="modal-rodape"
+                    style="padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
+                    <span id="m-mensagem" class="mensagem"></span>
+                    <div style="display:flex; gap:.5rem;">
+                        <button class="btn btn-secondary-dark btn-sm" id="modal-cancelar">Cancelar</button>
+                        <button class="btn btn-primary btn-sm" id="modal-salvar">Cadastrar</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="{{ url_for('static', filename='voluntarios.js') }}"></script>
+        <script src="{{ url_for('static', filename='voluntarios.js') }}"></script>
 </body>
 
 </html>

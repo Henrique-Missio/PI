@@ -30,7 +30,7 @@ VOLUNTARIO_BASE = {
     "bairro":           "Centro",
     "cidade":           "Santa Cruz do Sul",
     "estado":           "RS",
-    "senha":            "senha123",
+    "senha":            "Senha@123",
     "data_nasc":        "10-05-1995",
 }
 
@@ -159,7 +159,7 @@ class TestCadastroVoluntarioPeloAdmin:
 
     def test_senha_curta_falha(self):
         dados = {**VOLUNTARIO_BASE, "senha": "abc"}
-        with pytest.raises(ValueError, match="senha"):
+        with pytest.raises(ValueError, match="[Ss]enha"):
             cadastrar_usuario(dados, tipo="voluntario")
 
     def test_campo_obrigatorio_ausente_falha(self):

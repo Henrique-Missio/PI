@@ -115,6 +115,33 @@ document.getElementById("telefone_celular").addEventListener("input", (e) => {
     e.target.value = v;
 });
 
+// ── REQUISITOS DE SENHA FORTE ──
+function validarRequisitosSenha(senha) {
+    return {
+        tamanho: senha.length >= 8,
+        maiuscula: /[A-Z]/.test(senha),
+        numero: /[0-9]/.test(senha),
+        especial: /[^A-Za-z0-9]/.test(senha),
+    };
+}
+
+const listaRequisitos = document.getElementById("requisitos-senha");
+const campoSenha = document.getElementById("senha");
+
+campoSenha.addEventListener("input", () => {
+    const valor = campoSenha.value;
+    listaRequisitos.style.display = valor.length > 0 ? "flex" : "none";
+
+    const status = validarRequisitosSenha(valor);
+    Object.entries(status).forEach(([chave, atendido]) => {
+        const item = listaRequisitos.querySelector(`[data-requisito="${chave}"]`);
+        if (!item) return;
+        item.classList.toggle("requisito-ok", atendido);
+        item.classList.toggle("requisito-falta", !atendido);
+        item.querySelector(".requisito-icone").textContent = atendido ? "✓" : "✕";
+    });
+});
+
 // ── ENVIO DO FORMULÁRIO ──
 botaoCadastro.addEventListener("click", async () => {
     const camposObrigatorios = [
@@ -143,8 +170,9 @@ botaoCadastro.addEventListener("click", async () => {
         return;
     }
 
-    if (dados.senha.length < 6) {
-        mostrarErro("A senha deve ter pelo menos 6 caracteres.");
+    const requisitos = validarRequisitosSenha(dados.senha);
+    if (!Object.values(requisitos).every(Boolean)) {
+        mostrarErro("A senha não atende a todos os requisitos mínimos.");
         return;
     }
 

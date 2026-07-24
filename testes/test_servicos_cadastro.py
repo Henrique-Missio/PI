@@ -23,7 +23,7 @@ USUARIO_VALIDO = {
     "bairro":           "Centro",
     "cidade":           "Santa Cruz do Sul",
     "estado":           "RS",
-    "senha":            "senha123",
+    "senha":            "Senha@123",
     "data_nasc":        "10-05-2000",
 }
 
@@ -85,8 +85,8 @@ class TestCadastrarUsuarioFluxoCompleto:
                 nome_completo="João da Silva"
             ).first()
             assert pessoa is not None
-            assert pessoa.senha != "senha123"
-            assert check_password_hash(pessoa.senha, "senha123")
+            assert pessoa.senha != "Senha@123"
+            assert check_password_hash(pessoa.senha, "Senha@123")
         finally:
             session.close()
 
@@ -161,7 +161,7 @@ class TestCadastrarUsuarioFluxoCompleto:
         cadastrar_usuario(USUARIO_VALIDO)
         resultado = login({
             "email": "joao@teste.com",
-            "senha": "senha123",
+            "senha": "Senha@123",
         })
         assert resultado["nome_completo"] == "João da Silva"
 
@@ -242,7 +242,7 @@ class TestCadastrarUsuarioValidacaoEmail:
 class TestCadastrarUsuarioValidacaoSenha:
     def test_senha_menor_que_6_caracteres_falha(self):
         dados = {**USUARIO_VALIDO, "senha": "abc"}
-        with pytest.raises(ValueError, match="senha"):
+        with pytest.raises(ValueError, match="[Ss]enha"):
             cadastrar_usuario(dados)
 
     def test_senha_vazia_falha(self):
@@ -250,13 +250,33 @@ class TestCadastrarUsuarioValidacaoSenha:
         with pytest.raises(ValueError):
             cadastrar_usuario(dados)
 
-    def test_senha_com_exatamente_6_caracteres_aceita(self):
-        dados = {**USUARIO_VALIDO, "senha": "abc123"}
+    def test_senha_com_exatamente_8_caracteres_e_requisitos_aceita(self):
+        dados = {**USUARIO_VALIDO, "senha": "Abcd@123"}
         resultado = cadastrar_usuario(dados)
         assert resultado is not None
 
-    def test_senha_longa_aceita(self):
-        dados = {**USUARIO_VALIDO, "senha": "senhamuitorande123!@#"}
+    def test_senha_com_7_caracteres_falha(self):
+        dados = {**USUARIO_VALIDO, "senha": "Abc@123"}
+        with pytest.raises(ValueError, match="[Ss]enha"):
+            cadastrar_usuario(dados)
+
+    def test_senha_sem_maiuscula_falha(self):
+        dados = {**USUARIO_VALIDO, "senha": "senha@123"}
+        with pytest.raises(ValueError, match="[Ss]enha"):
+            cadastrar_usuario(dados)
+
+    def test_senha_sem_numero_falha(self):
+        dados = {**USUARIO_VALIDO, "senha": "Senha@abc"}
+        with pytest.raises(ValueError, match="[Ss]enha"):
+            cadastrar_usuario(dados)
+
+    def test_senha_sem_caractere_especial_falha(self):
+        dados = {**USUARIO_VALIDO, "senha": "Senha1234"}
+        with pytest.raises(ValueError, match="[Ss]enha"):
+            cadastrar_usuario(dados)
+
+    def test_senha_longa_com_todos_requisitos_aceita(self):
+        dados = {**USUARIO_VALIDO, "senha": "SenhaMuitoGrande123!@#"}
         resultado = cadastrar_usuario(dados)
         assert resultado is not None
 

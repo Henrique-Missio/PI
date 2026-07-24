@@ -45,6 +45,33 @@ function aplicarMascaraTelefone(valor) {
     return v;
 }
 
+// ── REQUISITOS DE SENHA FORTE ──
+function validarRequisitosSenha(senha) {
+    return {
+        tamanho: senha.length >= 8,
+        maiuscula: /[A-Z]/.test(senha),
+        numero: /[0-9]/.test(senha),
+        especial: /[^A-Za-z0-9]/.test(senha),
+    };
+}
+
+const listaRequisitos = document.getElementById("requisitos-nova-senha");
+const campoSenha = document.getElementById("nova_senha"); // underscore, não hífen
+
+campoSenha.addEventListener("input", () => {
+    const valor = campoSenha.value;
+    listaRequisitos.style.display = valor.length > 0 ? "flex" : "none";
+
+    const status = validarRequisitosSenha(valor);
+    Object.entries(status).forEach(([chave, atendido]) => {
+        const item = listaRequisitos.querySelector(`[data-requisito="${chave}"]`);
+        if (!item) return;
+        item.classList.toggle("requisito-ok", atendido);
+        item.classList.toggle("requisito-falta", !atendido);
+        item.querySelector(".requisito-icone").textContent = atendido ? "✓" : "✕";
+    });
+});
+
 async function carregarPerfil() {
     try {
         const resposta = await fetch("/api/perfil");
@@ -82,7 +109,14 @@ botaoSalvar.onclick = async () => {
     }
 
     const novaSenha = document.getElementById("nova_senha").value.trim();
-    if (novaSenha) dados.senha = novaSenha;
+    if (novaSenha) {
+        const requisitos = validarRequisitosSenha(novaSenha);
+        if (!Object.values(requisitos).every(Boolean)) {
+            mostrarErro("A nova senha não atende a todos os requisitos mínimos.");
+            return;
+        }
+        dados.senha = novaSenha;
+    }
 
     botaoSalvar.disabled = true;
     try {

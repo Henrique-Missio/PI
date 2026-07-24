@@ -1,10 +1,10 @@
 const listaVoluntarios = document.getElementById("lista-voluntarios");
-const modal            = document.getElementById("modal-voluntario");
-const btnNovo          = document.getElementById("btn-novo-voluntario");
-const btnFechar        = document.getElementById("modal-fechar");
-const btnCancelar      = document.getElementById("modal-cancelar");
-const btnSalvar        = document.getElementById("modal-salvar");
-const mMensagem        = document.getElementById("m-mensagem");
+const modal = document.getElementById("modal-voluntario");
+const btnNovo = document.getElementById("btn-novo-voluntario");
+const btnFechar = document.getElementById("modal-fechar");
+const btnCancelar = document.getElementById("modal-cancelar");
+const btnSalvar = document.getElementById("modal-salvar");
+const mMensagem = document.getElementById("m-mensagem");
 
 // ── Guards ──
 async function verificarAdmin() {
@@ -25,18 +25,18 @@ function fecharModal() {
 }
 
 function limparModal() {
-    ["m-nome","m-cpf","m-data-nasc","m-email","m-telefone",
-     "m-cep","m-numero","m-rua","m-bairro","m-cidade","m-estado",
-     "m-complemento","m-senha","m-confirmar-senha"].forEach(id => {
-        document.getElementById(id).value = "";
-    });
+    ["m-nome", "m-cpf", "m-data-nasc", "m-email", "m-telefone",
+        "m-cep", "m-numero", "m-rua", "m-bairro", "m-cidade", "m-estado",
+        "m-complemento", "m-senha", "m-confirmar-senha"].forEach(id => {
+            document.getElementById(id).value = "";
+        });
     document.getElementById("m-funcao").value = "";
     mMensagem.textContent = "";
     mMensagem.className = "mensagem";
 }
 
-btnNovo.onclick    = abrirModal;
-btnFechar.onclick  = fecharModal;
+btnNovo.onclick = abrirModal;
+btnFechar.onclick = fecharModal;
 btnCancelar.onclick = fecharModal;
 modal.onclick = (e) => { if (e.target === modal) fecharModal(); };
 
@@ -84,7 +84,7 @@ document.getElementById("m-cep").addEventListener("blur", async (e) => {
             mMensagem.className = "mensagem erro";
             return;
         }
-        document.getElementById("m-rua").value    = d.logradouro || "";
+        document.getElementById("m-rua").value = d.logradouro || "";
         document.getElementById("m-bairro").value = d.bairro || "";
         document.getElementById("m-cidade").value = d.localidade || "";
         document.getElementById("m-estado").value = d.uf || "";
@@ -96,17 +96,50 @@ document.getElementById("m-cep").addEventListener("blur", async (e) => {
     }
 });
 
+// ── REQUISITOS DE SENHA FORTE ──
+function validarRequisitosSenha(senha) {
+    return {
+        tamanho: senha.length >= 8,
+        maiuscula: /[A-Z]/.test(senha),
+        numero: /[0-9]/.test(senha),
+        especial: /[^A-Za-z0-9]/.test(senha),
+    };
+}
+
+const listaRequisitos = document.getElementById("requisitos-senha-voluntario");
+const campoSenha = document.getElementById("m-senha");
+
+campoSenha.addEventListener("input", () => {
+    const valor = campoSenha.value;
+    listaRequisitos.style.display = valor.length > 0 ? "flex" : "none";
+
+    const status = validarRequisitosSenha(valor);
+    Object.entries(status).forEach(([chave, atendido]) => {
+        const item = listaRequisitos.querySelector(`[data-requisito="${chave}"]`);
+        if (!item) return;
+        item.classList.toggle("requisito-ok", atendido);
+        item.classList.toggle("requisito-falta", !atendido);
+        item.querySelector(".requisito-icone").textContent = atendido ? "✓" : "✕";
+    });
+});
+
 // ── Cadastrar voluntário ──
 btnSalvar.onclick = async () => {
     mMensagem.textContent = "";
     mMensagem.className = "mensagem";
 
-    const senha   = document.getElementById("m-senha").value.trim();
+    const senha = document.getElementById("m-senha").value.trim();
     const confirm = document.getElementById("m-confirmar-senha").value.trim();
 
     if (senha !== confirm) {
         mMensagem.textContent = "Senhas não coincidem.";
         mMensagem.className = "mensagem erro";
+        return;
+    }
+
+    const requisitos = validarRequisitosSenha(dados.senha);
+    if (!Object.values(requisitos).every(Boolean)) {
+        mostrarErro("A senha não atende a todos os requisitos mínimos.");
         return;
     }
 
@@ -118,20 +151,20 @@ btnSalvar.onclick = async () => {
     }
 
     const dados = {
-        tipo:             "voluntario",
-        nome_completo:    document.getElementById("m-nome").value.trim(),
-        cpf:              document.getElementById("m-cpf").value.replace(/\D/g, ""),
-        data_nasc:        dataNascFmt,
-        funcao:           document.getElementById("m-funcao").value,
-        email_pessoal:    document.getElementById("m-email").value.trim(),
+        tipo: "voluntario",
+        nome_completo: document.getElementById("m-nome").value.trim(),
+        cpf: document.getElementById("m-cpf").value.replace(/\D/g, ""),
+        data_nasc: dataNascFmt,
+        funcao: document.getElementById("m-funcao").value,
+        email_pessoal: document.getElementById("m-email").value.trim(),
         telefone_celular: document.getElementById("m-telefone").value.replace(/\D/g, ""),
-        cep:              document.getElementById("m-cep").value.replace(/\D/g, ""),
-        numero:           document.getElementById("m-numero").value.trim(),
-        rua:              document.getElementById("m-rua").value.trim(),
-        bairro:           document.getElementById("m-bairro").value.trim(),
-        cidade:           document.getElementById("m-cidade").value.trim(),
-        estado:           document.getElementById("m-estado").value.trim(),
-        complemento:      document.getElementById("m-complemento").value.trim(),
+        cep: document.getElementById("m-cep").value.replace(/\D/g, ""),
+        numero: document.getElementById("m-numero").value.trim(),
+        rua: document.getElementById("m-rua").value.trim(),
+        bairro: document.getElementById("m-bairro").value.trim(),
+        cidade: document.getElementById("m-cidade").value.trim(),
+        estado: document.getElementById("m-estado").value.trim(),
+        complemento: document.getElementById("m-complemento").value.trim(),
         senha,
     };
 
