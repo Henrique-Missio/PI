@@ -66,7 +66,8 @@
                     <div class="form-grid-2">
                         <div class="campo">
                             <label for="email_pessoal">E-mail *</label>
-                            <input type="email" id="email_pessoal" maxlength="40" placeholder="seu@email.com" autocomplete="off" />
+                            <input type="email" id="email_pessoal" maxlength="40" placeholder="seu@email.com"
+                                autocomplete="off" />
                         </div>
                         <div class="campo">
                             <label for="telefone_celular">Telefone *</label>
@@ -121,7 +122,8 @@
                         <div class="campo">
                             <label for="senha">Senha *</label>
                             <div class="campo-senha-wrapper">
-                                <input type="password" id="senha" placeholder="Mínimo 8 caracteres" autocomplete="new-password"/>
+                                <input type="password" id="senha" placeholder="Mínimo 8 caracteres"
+                                    autocomplete="new-password" />
                                 <button type="button" class="toggle-senha" data-target="senha"
                                     aria-label="Mostrar senha">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -144,7 +146,7 @@
                         <div class="campo">
                             <label for="confirmar_senha">Confirmar senha *</label>
                             <div class="campo-senha-wrapper">
-                                <input type="password" id="confirmar_senha" placeholder="Repita a senha" maxlength="72"
+                                <input type="password" id="confirmar_senha" placeholder="Repita a senha"
                                     autocomplete="new-password" />
                                 <button type="button" class="toggle-senha" data-target="confirmar_senha"
                                     aria-label="Mostrar senha">
@@ -159,19 +161,21 @@
                     </div>
                 </div>
 
-                <div class="form-rodape">
-                    <span id="mensagem-cadastro" class="mensagem"></span>
-                    <button id="botao-cadastro" class="btn btn-primary">Criar conta</button>
-                </div>
             </div>
 
-            <p style="text-align:center;margin-top:1rem;font-size:.85rem;color:var(--text-secondary)">
-                Já tem conta? <a href="/login" style="color:var(--accent);font-weight:500;text-decoration:none">Faça
-                    login</a>
-            </p>
+            <div class="form-rodape">
+                <span id="mensagem-cadastro" class="mensagem"></span>
+                <button id="botao-cadastro" class="btn btn-primary">Criar conta</button>
+            </div>
         </div>
 
-        <script src="{{ url_for('static', filename='cadastro.js') }}"></script>
+        <p style="text-align:center;margin-top:1rem;font-size:.85rem;color:var(--text-secondary)">
+            Já tem conta? <a href="/login" style="color:var(--accent);font-weight:500;text-decoration:none">Faça
+                login</a>
+        </p>
+    </div>
+
+    <script src="{{ url_for('static', filename='cadastro.js') }}"></script>
 </body>
 
 </html>

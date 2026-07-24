@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pids Tech — Recuperar Senha</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+
+<body>
+
+    <header class="header">
+        <a class="header-logo" href="/">Pids<span>Tech</span></a>
+    </header>
+
+    <div class="auth-page">
+        <div class="auth-card">
+            <div class="auth-card-header">
+                <div class="auth-card-titulo">Recuperar senha</div>
+                <div class="auth-card-subtitulo">Digite seu e-mail cadastrado. Enviaremos um código de verificação.</div>
+            </div>
+
+            <div class="auth-card-corpo">
+                <div class="campo">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" placeholder="seu@email.com" autocomplete="username" />
+                </div>
+                <span id="mensagem-recuperar" class="mensagem"></span>
+                <button id="botao-enviar" class="btn btn-primary">Enviar código</button>
+            </div>
+
+            <div class="auth-card-rodape">
+                <a href="/login">← Voltar ao login</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='recuperar-senha.js') }}"></script>
+</body>
+
+</html>

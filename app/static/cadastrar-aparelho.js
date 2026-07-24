@@ -1,26 +1,10 @@
-const mensagem = document.getElementById("mensagem-aparelho");
+const mensagem   = document.getElementById("mensagem-aparelho");
 const btnCadastrar = document.getElementById("btn-cadastrar");
 const campoDataEntrada = document.getElementById("data_entrada");
 
 const hojeISO = new Date().toISOString().split("T")[0];
 campoDataEntrada.value = hojeISO;
 campoDataEntrada.max = hojeISO; // não deixa escolher data futura
-
-function adicionarContador(idCampo, limite) {
-  const campo = document.getElementById(idCampo);
-  const contador = document.createElement("span");
-  contador.className = "contador-caracteres";
-  campo.parentElement.appendChild(contador);
-
-  function atualizar() {
-    contador.textContent = `${campo.value.length}/${limite}`;
-  }
-  campo.addEventListener("input", atualizar);
-  atualizar();
-}
-
-adicionarContador("informacoes", 1500);
-adicionarContador("problema", 500);
 
 function mostrarErro(msg) {
   mensagem.textContent = msg;
@@ -33,17 +17,17 @@ function mostrarSucesso(msg) {
 }
 
 btnCadastrar.addEventListener("click", async () => {
-  const nome = document.getElementById("nome").value.trim();
-  const marca = document.getElementById("marca").value.trim();
-  const informacoes = document.getElementById("informacoes").value.trim();
-  const status = document.getElementById("status").value;
-  const problema = document.getElementById("problema").value.trim();
-  const dataRaw = campoDataEntrada.value;
+  const nome       = document.getElementById("nome").value.trim();
+  const marca      = document.getElementById("marca").value.trim();
+  const informacoes= document.getElementById("informacoes").value.trim();
+  const status     = document.getElementById("status").value;
+  const problema   = document.getElementById("problema").value.trim();
+  const dataRaw    = campoDataEntrada.value;
 
-  if (!nome) { mostrarErro("Preencha o nome."); return; }
-  if (!marca) { mostrarErro("Preencha a marca."); return; }
+  if (!nome)        { mostrarErro("Preencha o nome.");        return; }
+  if (!marca)       { mostrarErro("Preencha a marca.");       return; }
   if (!informacoes) { mostrarErro("Preencha as informações."); return; }
-  if (!status) { mostrarErro("Selecione o status."); return; }
+  if (!status)      { mostrarErro("Selecione o status.");     return; }
   if (dataRaw && dataRaw > hojeISO) { mostrarErro("A data de entrada não pode ser no futuro."); return; }
 
   const dados = { nome, marca, informacoes, status, problema: problema || "Sem observações" };

@@ -7,6 +7,7 @@ from app.servicos import (
     listar_aparelhos, buscar_aparelho_por_id, cadastrar_aparelho, editar_aparelho, excluir_aparelho,
     listar_pecas,     buscar_peca_por_id,     cadastrar_peca,     editar_peca,     excluir_peca,
     listar_estoque,   buscar_estoque_por_id,
+    solicitar_recuperacao_senha, verificar_codigo_recuperacao, redefinir_senha_com_codigo,
 )
 
 bp = fk.Blueprint("api",     __name__, url_prefix="/api")
@@ -59,8 +60,44 @@ def rota_me():
         return _erro("Não autorizado.", 401)
     return fk.jsonify(usuario)
 
+# ── RECUPERAÇÃO DE SENHA ──
+
+
+@bp.post("/recuperar-senha")
+def rota_recuperar_senha():
+    dados = fk.request.get_json(silent=True) or {}
+    try:
+        return fk.jsonify(solicitar_recuperacao_senha(dados.get("email")))
+    except ValueError as exc:
+        return _erro(str(exc))
+
+
+@bp.post("/verificar-codigo")
+def rota_verificar_codigo():
+    dados = fk.request.get_json(silent=True) or {}
+    try:
+        valido = verificar_codigo_recuperacao(
+            dados.get("email"), dados.get("codigo"))
+        if not valido:
+            return _erro("Código inválido ou expirado.")
+        return fk.jsonify({"valido": True})
+    except ValueError as exc:
+        return _erro(str(exc))
+
+
+@bp.post("/redefinir-senha")
+def rota_redefinir_senha():
+    dados = fk.request.get_json(silent=True) or {}
+    try:
+        return fk.jsonify(redefinir_senha_com_codigo(
+            dados.get("email"), dados.get("codigo"), dados.get("nova_senha")
+        ))
+    except ValueError as exc:
+        return _erro(str(exc))
 
 # ── USUÁRIOS ──
+
+
 @bp.post("/cadastro")
 def rota_cadastro():
     dados = fk.request.get_json(silent=True) or {}
@@ -306,7 +343,8 @@ def rota_relatorio_pdf():
     return fk.Response(
         pdf_bytes,
         mimetype="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=relatorio-pidstech-{dados['gerado_em'].replace('/', '-')}.pdf"}
+        headers={
+            "Content-Disposition": f"attachment; filename=relatorio-pidstech-{dados['gerado_em'].replace('/', '-')}.pdf"}
     )
 
 
@@ -367,3 +405,20 @@ def pagina_cadastrar_peca():
     if not _usuario_logado():
         return fk.redirect("/login")
     return fk.render_template("cadastrar-peca.html")
+
+
+@paginas.get("/recuperar-senha")
+def pagina_recuperar_senha():
+    if _usuario_logado():
+        return fk.redirect("/")
+    return fk.render_template("recuperar-senha.html")
+
+
+@paginas.get("/verificar-codigo")
+def pagina_verificar_codigo():
+    return fk.render_template("verificar-codigo.html")
+
+
+@paginas.get("/redefinir-senha")
+def pagina_redefinir_senha():
+    return fk.render_template("redefinir-senha.html")

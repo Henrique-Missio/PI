@@ -1,28 +1,28 @@
 // ── Estado global ──
-let usuarioAtual = null;
-let todosItens = [];
-let itemAtual = null;
+let usuarioAtual  = null;
+let todosItens    = [];
+let itemAtual     = null;
 
 // ── Referências DOM ──
-const corpoTabela = document.getElementById("corpo-tabela");
-const contagem = document.getElementById("contagem");
-const modal = document.getElementById("modal");
-const modalTitulo = document.getElementById("modal-titulo");
-const modalConteudo = document.getElementById("modal-conteudo");
-const modalRodape = document.getElementById("modal-rodape");
-const modalFechar = document.getElementById("modal-fechar");
-const modalEditar = document.getElementById("modal-editar");
+const corpoTabela  = document.getElementById("corpo-tabela");
+const contagem     = document.getElementById("contagem");
+const modal        = document.getElementById("modal");
+const modalTitulo  = document.getElementById("modal-titulo");
+const modalConteudo= document.getElementById("modal-conteudo");
+const modalRodape  = document.getElementById("modal-rodape");
+const modalFechar  = document.getElementById("modal-fechar");
+const modalEditar  = document.getElementById("modal-editar");
 const modalExcluir = document.getElementById("modal-excluir");
 
 // ── Badge de status ──
 function badgeStatus(status) {
   if (!status) return "—";
   const classes = {
-    "Funcional": "badge-funcional",
-    "Não funcional": "badge-nao-funcional",
-    "Em conserto": "badge-em-conserto",
-    "Reservado": "badge-reservado",
-    "Doado": "badge-doado",
+    "Funcional":      "badge-funcional",
+    "Não funcional":  "badge-nao-funcional",
+    "Em conserto":    "badge-em-conserto",
+    "Reservado":      "badge-reservado",
+    "Doado":          "badge-doado",
   };
   const cls = classes[status] || "";
   return `<span class="badge ${cls}">${status}</span>`;
@@ -31,21 +31,21 @@ function badgeStatus(status) {
 function badgeCategoria(cat) {
   if (!cat) return "—";
   const label = cat === "aparelho" ? "Aparelho" : "Peça";
-  const cls = cat === "aparelho" ? "badge-categoria-aparelho" : "badge-categoria-peca";
+  const cls   = cat === "aparelho" ? "badge-categoria-aparelho" : "badge-categoria-peca";
   return `<span class="badge ${cls}">${label}</span>`;
 }
 
 // ── Código do item (identificação única, ex: #0007) ──
 function codigoItem(item) {
   const prefixo = item.categoria === "aparelho" ? "AP" : "PC";
-  const numero = String(item.id).padStart(4, "0");
+  const numero  = String(item.id).padStart(4, "0");
   return `${prefixo}-${numero}`;
 }
 
 // ── Renderizar tabela ──
 function renderizarTabela(itens) {
   corpoTabela.innerHTML = "";
-  contagem.textContent = itens.length;
+  contagem.textContent  = itens.length;
 
   if (!itens.length) {
     corpoTabela.innerHTML = `<tr><td colspan="8" class="td-vazio">Nenhum item encontrado. Tente ajustar os filtros.</td></tr>`;
@@ -123,22 +123,16 @@ function renderizarTabela(itens) {
 // ── Filtros ──
 function aplicarFiltros() {
   const fCategoria = document.getElementById("f-categoria").value.toLowerCase();
-  const fStatus = document.getElementById("f-status").value;
-  const fCodigo = document.getElementById("f-codigo").value.trim().toLowerCase(); // NOVO
-  const fNome = document.getElementById("f-nome").value.toLowerCase();
-  const fMarca = document.getElementById("f-marca").value.toLowerCase();
-  const fDataDe = document.getElementById("f-data-de").value;
-  const fDataAte = document.getElementById("f-data-ate").value;
+  const fStatus    = document.getElementById("f-status").value;
+  const fNome      = document.getElementById("f-nome").value.toLowerCase();
+  const fMarca     = document.getElementById("f-marca").value.toLowerCase();
+  const fDataDe    = document.getElementById("f-data-de").value;
+  const fDataAte   = document.getElementById("f-data-ate").value;
 
   const filtrado = todosItens.filter(item => {
     if (fCategoria && item.categoria !== fCategoria) return false;
     if (fStatus && item.status !== fStatus) return false;
-    if (fCodigo) { // NOVO
-      const codigo = codigoItem(item).toLowerCase();      // ex: "ap-0001"
-      const idPuro = String(item.id);                     // ex: "1"
-      if (!codigo.includes(fCodigo) && !idPuro.includes(fCodigo)) return false;
-    }
-    if (fNome && !(item.nome || "").toLowerCase().includes(fNome)) return false;
+    if (fNome  && !(item.nome  || "").toLowerCase().includes(fNome))  return false;
     if (fMarca && !(item.marca || "").toLowerCase().includes(fMarca)) return false;
     if (fDataDe && item.data_entrada && item.data_entrada < fDataDe) return false;
     if (fDataAte && item.data_entrada && item.data_entrada > fDataAte) return false;
@@ -148,13 +142,13 @@ function aplicarFiltros() {
   renderizarTabela(filtrado);
 }
 
-["f-categoria", "f-status", "f-codigo", "f-nome", "f-marca", "f-data-de", "f-data-ate"].forEach(id => {
+["f-categoria","f-status","f-nome","f-marca","f-data-de","f-data-ate"].forEach(id => {
   document.getElementById(id).addEventListener("input", aplicarFiltros);
   document.getElementById(id).addEventListener("change", aplicarFiltros);
 });
 
 document.getElementById("btn-limpar-filtros").addEventListener("click", () => {
-  ["f-categoria", "f-status", "f-codigo", "f-nome", "f-marca", "f-data-de", "f-data-ate"]
+  ["f-categoria","f-status","f-nome","f-marca","f-data-de","f-data-ate"]
     .forEach(id => document.getElementById(id).value = "");
   aplicarFiltros();
 });
@@ -174,7 +168,7 @@ async function carregarEstoque() {
 document.getElementById("btn-recarregar").addEventListener("click", carregarEstoque);
 
 // ── Modal ──
-const CAMPOS_STATUS = ["Funcional", "Não funcional", "Em conserto", "Reservado", "Doado"];
+const CAMPOS_STATUS = ["Funcional","Não funcional","Em conserto","Reservado","Doado"];
 
 function abrirModal(item) {
   itemAtual = item;
@@ -182,12 +176,12 @@ function abrirModal(item) {
   modalConteudo.innerHTML = "";
 
   const campos = [
-    { rotulo: "Categoria", valor: item.categoria === "aparelho" ? "Aparelho" : "Peça" },
-    { rotulo: "Status", valor: item.status },
-    { rotulo: "Informações", valor: item.informacoes },
-    { rotulo: "Problema", valor: item.problema },
-    { rotulo: "Data de entrada", valor: item.data_entrada },
-    { rotulo: "Data de saída", valor: item.data_saida },
+    { rotulo: "Categoria",      valor: item.categoria === "aparelho" ? "Aparelho" : "Peça" },
+    { rotulo: "Status",         valor: item.status },
+    { rotulo: "Informações",    valor: item.informacoes },
+    { rotulo: "Problema",       valor: item.problema },
+    { rotulo: "Data de entrada",valor: item.data_entrada },
+    { rotulo: "Data de saída",  valor: item.data_saida },
   ];
 
   campos.forEach(({ rotulo, valor }) => {
@@ -247,23 +241,23 @@ modalEditar.onclick = () => {
 
   const campos = itemAtual.categoria === "aparelho"
     ? [
-      { nome: "nome", rotulo: "Nome *", tipo: "text", obrigatorio: true },
-      { nome: "marca", rotulo: "Marca *", tipo: "text", obrigatorio: true },
-      { nome: "informacoes", rotulo: "Informações *", tipo: "text", obrigatorio: true },
-      { nome: "problema", rotulo: "Problema", tipo: "text" },
-      { nome: "status", rotulo: "Status *", tipo: "select", obrigatorio: true },
-      { nome: "data_entrada", rotulo: "Data de entrada", tipo: "date" },
-      { nome: "data_saida", rotulo: "Data de saída", tipo: "date" },
-    ]
+        { nome: "nome",         rotulo: "Nome *",          tipo: "text",   obrigatorio: true },
+        { nome: "marca",        rotulo: "Marca *",         tipo: "text",   obrigatorio: true },
+        { nome: "informacoes",  rotulo: "Informações *",   tipo: "text",   obrigatorio: true },
+        { nome: "problema",     rotulo: "Problema",        tipo: "text" },
+        { nome: "status",       rotulo: "Status *",        tipo: "select", obrigatorio: true },
+        { nome: "data_entrada", rotulo: "Data de entrada", tipo: "date" },
+        { nome: "data_saida",   rotulo: "Data de saída",   tipo: "date" },
+      ]
     : [
-      { nome: "nome", rotulo: "Nome *", tipo: "text", obrigatorio: true },
-      { nome: "marca", rotulo: "Marca *", tipo: "text", obrigatorio: true },
-      { nome: "informacoes", rotulo: "Informações *", tipo: "text", obrigatorio: true },
-      { nome: "problema", rotulo: "Problema", tipo: "text" },
-      { nome: "status", rotulo: "Status *", tipo: "select", obrigatorio: true },
-      { nome: "data_entrada", rotulo: "Data de entrada", tipo: "date" },
-      { nome: "data_saida", rotulo: "Data de saída", tipo: "date" },
-    ];
+        { nome: "nome",         rotulo: "Nome *",          tipo: "text",   obrigatorio: true },
+        { nome: "marca",        rotulo: "Marca *",         tipo: "text",   obrigatorio: true },
+        { nome: "informacoes",  rotulo: "Informações *",   tipo: "text",   obrigatorio: true },
+        { nome: "problema",     rotulo: "Problema",        tipo: "text" },
+        { nome: "status",       rotulo: "Status *",        tipo: "select", obrigatorio: true },
+        { nome: "data_entrada", rotulo: "Data de entrada", tipo: "date" },
+        { nome: "data_saida",   rotulo: "Data de saída",   tipo: "date" },
+      ];
 
   const form = document.createElement("div");
 
@@ -371,19 +365,19 @@ function renderizarAuth() {
 
   if (usuarioAtual) {
     const iniciais = getIniciais(usuarioAtual.nome_completo);
-    const isAdmin = usuarioAtual.tipo === "administrador";
+    const isAdmin  = usuarioAtual.tipo === "administrador";
 
     const itensMenu = isAdmin
       ? [
-        { label: "Informações", href: "/perfil" },
-        { label: "Voluntários", href: "/voluntarios" },
-        { label: "Relatórios", href: "/relatorios" },
-        { label: "Sair", acao: "sair" },
-      ]
+          { label: "Informações", href: "/perfil" },
+          { label: "Voluntários", href: "/voluntarios" },
+          { label: "Relatórios",  href: "/relatorios" },
+          { label: "Sair", acao: "sair" },
+        ]
       : [
-        { label: "Informações", href: "/perfil" },
-        { label: "Sair", acao: "sair" },
-      ];
+          { label: "Informações", href: "/perfil" },
+          { label: "Sair", acao: "sair" },
+        ];
 
     const wrapper = document.createElement("div");
     wrapper.className = "avatar-wrapper";

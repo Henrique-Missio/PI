@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pids Tech — Verificar Código</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+
+<body>
+
+    <header class="header">
+        <a class="header-logo" href="/">Pids<span>Tech</span></a>
+    </header>
+
+    <div class="auth-page">
+        <div class="auth-card">
+            <div class="auth-card-header">
+                <div class="auth-card-titulo">Digite o código</div>
+                <div class="auth-card-subtitulo">Enviamos um código de 6 dígitos pro seu e-mail. Ele expira em 15 minutos.</div>
+            </div>
+
+            <div class="auth-card-corpo">
+                <div class="campo">
+                    <label for="codigo">Código</label>
+                    <input type="text" id="codigo" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
+                </div>
+                <span id="mensagem-codigo" class="mensagem"></span>
+                <button id="botao-verificar" class="btn btn-primary">Verificar código</button>
+            </div>
+
+            <div class="auth-card-rodape">
+                <button type="button" id="botao-reenviar" class="btn btn-ghost btn-sm">Reenviar código</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='verificar-codigo.js') }}"></script>
+</body>
+
+</html>

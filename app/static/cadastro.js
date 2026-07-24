@@ -115,6 +115,7 @@ document.getElementById("telefone_celular").addEventListener("input", (e) => {
     e.target.value = v;
 });
 
+
 // ── REQUISITOS DE SENHA FORTE ──
 function validarRequisitosSenha(senha) {
     return {
@@ -139,6 +140,24 @@ campoSenha.addEventListener("input", () => {
         item.classList.toggle("requisito-ok", atendido);
         item.classList.toggle("requisito-falta", !atendido);
         item.querySelector(".requisito-icone").textContent = atendido ? "✓" : "✕";
+    });
+});
+
+// ── TOGGLE DE VISUALIZAÇÃO DE SENHA ──
+document.addEventListener("DOMContentLoaded", () => {
+    const ICONE_OLHO_ABERTO = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const ICONE_OLHO_FECHADO = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68M6.61 6.61A13.526 13.526 0 0 0 1 12s4 8 11 8a9.26 9.26 0 0 0 5.39-1.61M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
+    document.querySelectorAll(".toggle-senha").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const input = document.getElementById(btn.dataset.target);
+            if (!input) return;
+            const mostrando = input.type === "text";
+            input.type = mostrando ? "password" : "text";
+            btn.innerHTML = mostrando ? ICONE_OLHO_ABERTO : ICONE_OLHO_FECHADO;
+            btn.classList.toggle("ativo", !mostrando);
+            btn.setAttribute("aria-label", mostrando ? "Mostrar senha" : "Ocultar senha");
+        });
     });
 });
 
@@ -182,6 +201,15 @@ botaoCadastro.addEventListener("click", async () => {
         return;
     }
     dados.cpf = cpfLimpo;
+
+    // ── VALIDAÇÃO DATA DE NASCIMENTO ──
+    const dataNascObj = new Date(dados.data_nasc + "T00:00:00");
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    if (dataNascObj > hoje) {
+        mostrarErro("Data de nascimento não pode ser no futuro.");
+        return;
+    }
 
     const telLimpo = dados.telefone_celular.replace(/\D/g, "");
     if (telLimpo.length < 10) {
@@ -229,25 +257,6 @@ botaoCadastro.addEventListener("click", async () => {
 });
 
 verificarLogin();
-
-// ── TOGGLE DE VISUALIZAÇÃO DE SENHA ──
-document.addEventListener("DOMContentLoaded", () => {
-    const ICONE_OLHO_ABERTO = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>`;
-    const ICONE_OLHO_FECHADO = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68M6.61 6.61A13.526 13.526 0 0 0 1 12s4 8 11 8a9.26 9.26 0 0 0 5.39-1.61M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
-
-    document.querySelectorAll(".toggle-senha").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const input = document.getElementById(btn.dataset.target);
-            if (!input) return;
-
-            const mostrando = input.type === "text";
-            input.type = mostrando ? "password" : "text";
-            btn.innerHTML = mostrando ? ICONE_OLHO_ABERTO : ICONE_OLHO_FECHADO;
-            btn.classList.toggle("ativo", !mostrando);
-            btn.setAttribute("aria-label", mostrando ? "Mostrar senha" : "Ocultar senha");
-        });
-    });
-});
 
 // Exporta para uso em testes (Jest) sem afetar a execução no navegador
 if (typeof module !== "undefined" && module.exports) {

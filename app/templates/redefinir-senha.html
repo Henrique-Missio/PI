@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pids Tech — Redefinir Senha</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+
+<body>
+
+    <header class="header">
+        <a class="header-logo" href="/">Pids<span>Tech</span></a>
+    </header>
+
+    <div class="auth-page">
+        <div class="auth-card">
+            <div class="auth-card-header">
+                <div class="auth-card-titulo">Nova senha</div>
+                <div class="auth-card-subtitulo">Escolha uma nova senha pra sua conta.</div>
+            </div>
+
+            <div class="auth-card-corpo">
+                <div class="campo">
+                    <label for="nova_senha">Nova senha</label>
+                    <div class="campo-senha-wrapper">
+                        <input type="password" id="nova_senha" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
+                        <button type="button" class="toggle-senha" data-target="nova_senha" aria-label="Mostrar senha">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                    <ul id="requisitos-senha" class="requisitos-senha" style="display:none">
+                        <li data-requisito="tamanho"><span class="requisito-icone">✕</span> Mínimo 8 caracteres</li>
+                        <li data-requisito="maiuscula"><span class="requisito-icone">✕</span> Uma letra maiúscula</li>
+                        <li data-requisito="numero"><span class="requisito-icone">✕</span> Um número</li>
+                        <li data-requisito="especial"><span class="requisito-icone">✕</span> Um caractere especial</li>
+                    </ul>
+                </div>
+
+                <div class="campo">
+                    <label for="confirmar_senha">Confirmar nova senha</label>
+                    <div class="campo-senha-wrapper">
+                        <input type="password" id="confirmar_senha" placeholder="Repita a senha" autocomplete="new-password" />
+                        <button type="button" class="toggle-senha" data-target="confirmar_senha" aria-label="Mostrar senha">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <span id="mensagem-redefinir" class="mensagem"></span>
+                <button id="botao-redefinir" class="btn btn-primary">Salvar nova senha</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='redefinir-senha.js') }}"></script>
+</body>
+
+</html>

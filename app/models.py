@@ -1,6 +1,20 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Text, Date, func
+from sqlalchemy import Column, ForeignKey, Integer, String, Text, Date, DateTime, Boolean, func
 from sqlalchemy.orm import relationship
 from app.database import Base
+
+class CodigoRecuperacao(Base):
+    __tablename__ = "codigo_recuperacao"
+
+    id        = Column(Integer, primary_key=True, autoincrement=True)
+    id_pessoa = Column(Integer, ForeignKey("pessoa.id"), nullable=False)
+    codigo    = Column(String(6), nullable=False)
+    expira_em = Column(DateTime, nullable=False)
+    usado     = Column(Boolean, nullable=False, default=False)
+
+    pessoa = relationship("Pessoa")
+
+    def __repr__(self):
+        return f"<CodigoRecuperacao {self.id} pessoa={self.id_pessoa} usado={self.usado}>"
 
 class Pecas(Base):
     __tablename__ = "pecas"
@@ -66,7 +80,7 @@ class Estoque(Base):
     __tablename__ = "estoque"
 
     id          = Column(Integer, primary_key=True, autoincrement=True, unique=True)
-    categoria   = Column(String(15), nullable=False)
+    categoria   = Column(String(15), nullable=False)  # "aparelho" ou "peca"
     id_aparelho = Column(Integer, ForeignKey("aparelhos.id"), nullable=True)
     id_pecas    = Column(Integer, ForeignKey("pecas.id"), nullable=True)
 
@@ -134,31 +148,7 @@ class Pessoa_fisica(Base):
 
     def __repr__(self):
         return f"<Pessoa_fisica {self.id} {self.cpf}>"
-    
-# class Pessoa_juridica(Base):
-#     __tablename__="pessoa_juridica"
 
-#     id=Column(Integer,primary_key=True,autoincrement=True)
-#     cnpj=Column(String(18),unique=True,nullable=False)
-#     nome_fantasia=Column(String(60),nullable=False)
-#     inscricao_estadual=Column(String(20),nullable=False)
-#     razao_social=Column(String(80),nullable=False)
-
-#     id_pessoa = Column(Integer, ForeignKey("pessoa.id"), nullable=False)
-#     pessoa = relationship("Pessoa", back_populates="pessoa_juridica")
-
-#     def to_dict(self):
-#             return {
-#                 "id": self.id,
-#                 "cnpj": self.cnpj,
-#                 "nome_fantasia": self.nome_fantasia,
-#                 "inscricao_estadual": self.inscricao_estadual,
-#                 "razao_social": self.razao_social,
-#                 "id_pessoa": self.id_pessoa
-#             }
-
-#     def __repr__(self):
-#         return f"<Pessoa jurídica {self.id} {self.nome_fantasia} {self.cnpj}>"
 
 class Endereco(Base):
     __tablename__ = "endereco"
@@ -168,8 +158,8 @@ class Endereco(Base):
     rua         = Column(String(60), nullable=False)
     numero      = Column(String(10), nullable=False)   
     complemento = Column(String(60), nullable=True)   
-    bairro      = Column(String(40), nullable=False)
-    cidade      = Column(String(40), nullable=False)
+    bairro      = Column(String(30), nullable=False)
+    cidade      = Column(String(30), nullable=False)
     estado      = Column(String(30), nullable=False)
     id_pessoa   = Column(Integer, ForeignKey("pessoa.id"), nullable=False)
 
@@ -196,8 +186,8 @@ class Email(Base):
     __tablename__ = "email"
 
     id              = Column(Integer, primary_key=True, autoincrement=True)
-    email_pessoal   = Column(String(100), nullable=True)
-    email_juridico  = Column(String(100), nullable=True)  
+    email_pessoal   = Column(String(40), nullable=True)
+    email_juridico  = Column(String(40), nullable=True)  
     id_pessoa       = Column(Integer, ForeignKey("pessoa.id"), nullable=False)
 
     pessoa = relationship("Pessoa", back_populates="emails")

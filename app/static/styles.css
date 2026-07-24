@@ -600,11 +600,6 @@ tbody td {
   box-shadow: 0 0 0 3px rgba(13, 148, 136, .1);
 }
 
-.campo textarea {
-  min-height: 130px;
-  resize: vertical;
-}
-
 .campo input[readonly] {
   background: var(--bg);
   color: var(--text-secondary);
@@ -1082,7 +1077,6 @@ tbody td {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
   padding: .2rem .3rem;
   line-height: 1;
   color: var(--text-muted);
@@ -1091,61 +1085,55 @@ tbody td {
   justify-content: center;
 }
 
-.toggle-senha.ativo {
-  color: var(--accent);
-}
-
 .toggle-senha:hover {
   color: var(--text-primary);
 }
 
-/* Remove o ícone nativo de "mostrar senha" do navegador (Edge/IE),
-   que duplicava o ícone customizado (.toggle-senha) */
-input[type="password"]::-ms-reveal,
-input[type="password"]::-ms-clear {
+.toggle-senha.ativo {
+  color: var(--accent);
+}
+
+/* Checklist de requisitos de senha */
+ul.requisitos-senha {
+  list-style: none !important;
+  margin: .5rem 0 0 !important;
+  padding: 0 !important;
   display: none;
-}
-
-.contador-caracteres {
-  display: block;
-  text-align: right;
-  font-size: .72rem;
-  color: var(--text-muted);
-  margin-top: .25rem;
-}
-
-.requisitos-senha {
-  list-style: none;
-  margin: .5rem 0 0;
-  padding: 0;
+  flex-direction: column !important;
+  gap: .3rem !important;
   font-size: .78rem;
-  display: none;
-  flex-direction: column;
-  gap: .25rem;
 }
 
-.requisitos-senha li {
+ul.requisitos-senha li {
   display: flex;
   align-items: center;
   gap: .4rem;
   color: var(--text-muted);
-  transition: color .15s;
+  list-style: none;
+  white-space: nowrap;
 }
 
-.requisito-icone {
+ul.requisitos-senha .requisito-icone {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 14px;
+  flex-shrink: 0;
   font-weight: 700;
 }
 
-.requisito-falta,
-.requisito-falta .requisito-icone {
+ul.requisitos-senha .requisito-falta,
+ul.requisitos-senha .requisito-falta .requisito-icone {
   color: var(--danger);
 }
 
-.requisito-ok,
-.requisito-ok .requisito-icone {
+ul.requisitos-senha .requisito-ok,
+ul.requisitos-senha .requisito-ok .requisito-icone {
   color: var(--success);
+}
+
+/* Remove o olho nativo do navegador (duplicava o seu botão customizado) */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
 }
