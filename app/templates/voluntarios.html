@@ -5,7 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pids Tech — Voluntários</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/voluntarios.css') }}" />
 </head>
 
 <body>
@@ -18,9 +19,8 @@
     </header>
 
     <div class="page-wrapper">
-        <div class="form-card" style="max-width: 700px; margin: 2rem auto;">
-            <div class="form-card-header"
-                style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem;">
+        <div class="form-card form-card--voluntarios">
+            <div class="form-card-header form-card-header--acoes">
                 <div>
                     <div class="form-card-titulo">Gerenciar voluntários</div>
                     <div class="form-card-subtitulo">Voluntários cadastrados no sistema</div>
@@ -34,13 +34,13 @@
     </div>
 
     <!-- Modal novo voluntário -->
-    <div class="modal-fundo" id="modal-voluntario" style="display:none;">
-        <div class="modal-caixa" style="max-width:620px; max-height:90vh; overflow-y:auto;">
+    <div class="modal-fundo" id="modal-voluntario">
+        <div class="modal-caixa modal-caixa--voluntario">
             <div class="modal-topo">
                 <span class="modal-titulo">Novo voluntário</span>
                 <button class="modal-fechar-btn" id="modal-fechar">✕</button>
             </div>
-            <div class="modal-corpo" style="padding:1.5rem;">
+            <div class="modal-corpo modal-corpo--voluntario">
 
                 <div class="form-secao">
                     <div class="form-secao-titulo">Dados pessoais</div>
@@ -136,7 +136,7 @@
                                     </svg>
                                 </button>
                             </div>
-                            <ul id="requisitos-senha-voluntario" class="requisitos-senha" style="display:none">
+                            <ul id="requisitos-senha-voluntario" class="requisitos-senha">
                                 <li data-requisito="tamanho"><span class="requisito-icone">✕</span> Mínimo 8 caracteres
                                 </li>
                                 <li data-requisito="maiuscula"><span class="requisito-icone">✕</span> Uma letra
@@ -163,10 +163,9 @@
                     </div>
 
                 </div>
-                <div class="modal-rodape"
-                    style="padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center;">
+                <div class="modal-rodape modal-rodape--voluntario">
                     <span id="m-mensagem" class="mensagem"></span>
-                    <div style="display:flex; gap:.5rem;">
+                    <div class="grupo-botoes">
                         <button class="btn btn-secondary-dark btn-sm" id="modal-cancelar">Cancelar</button>
                         <button class="btn btn-primary btn-sm" id="modal-salvar">Cadastrar</button>
                     </div>

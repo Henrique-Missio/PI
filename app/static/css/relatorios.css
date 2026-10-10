@@ -1,0 +1,176 @@
+/* relatorios.css — específico de relatorios.html */
+
+/* ── Relatórios ──
+   Mobile-first: 1 coluna é a base; 2 colunas a partir de 481px;
+   4 colunas a partir de 769px (ver bloco responsivo). */
+.relatorio-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.relatorio-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+
+.relatorio-card-label {
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-muted);
+}
+
+.relatorio-card-valor {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--text);
+}
+
+.relatorio-card-teal .relatorio-card-valor {
+  color: #0D9488;
+}
+
+.relatorio-card-blue .relatorio-card-valor {
+  color: #3B82F6;
+}
+
+.relatorio-card-green .relatorio-card-valor {
+  color: #10B981;
+}
+
+.grafico-tab.ativo {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ── Classes novas (substituem style inline de relatorios.html) ── */
+.relatorios-filtros {
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.filtro-grupo-custom {
+  display: none;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: .5rem;
+}
+
+.filtro-grupo--compacto {
+  min-width: 130px;
+  flex: none;
+}
+
+.relatorios-acoes-filtro {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .5rem;
+  flex: 1 0 100%;
+}
+
+.relatorios-acoes-filtro .btn {
+  justify-content: center;
+  padding-inline: .5rem;
+  font-size: .8rem;
+}
+
+@media (min-width: 640px) {
+  .relatorios-filtros {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .filtro-grupo--select {
+    grid-column: span 2;
+  }
+
+  .filtro-grupo--texto {
+    grid-column: span 3;
+  }
+
+  .filtro-grupo-custom,
+  .relatorios-acoes-filtro {
+    grid-column: 1 / -1;
+  }
+  .relatorios-acoes-filtro {
+    grid-template-columns: repeat(3, max-content);
+  }
+
+  .relatorios-acoes-filtro .btn {
+    min-width: 130px;
+  }
+}
+
+.relatorios-area-grafico {
+  margin-bottom: 1.5rem;
+}
+
+.relatorios-tabela-wrap {
+  overflow-x: auto;
+  container-type: inline-size;
+}
+
+.col-marca,
+.col-status,
+.col-entrada {
+  display: none;
+}
+
+@container (min-width: 520px) {
+  .col-marca {
+    display: table-cell;
+  }
+}
+
+@container (min-width: 640px) {
+  .col-status {
+    display: table-cell;
+  }
+}
+
+@container (min-width: 760px) {
+  .col-entrada {
+    display: table-cell;
+  }
+}
+
+/* ── Responsivo (mobile-first) ── */
+@media (min-width: 481px) {
+  .relatorio-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 769px) {
+  .relatorio-cards {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .grafico-wrap {
+    height: 380px;
+  }
+}
+
+.grafico-wrap {
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
+.grafico-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.filtro-grupo--texto {
+  flex: 1 0 100%;
+}

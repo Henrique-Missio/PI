@@ -5,7 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pids Tech — Cadastro</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cadastro.css') }}" />
 </head>
 
 <body>
@@ -17,7 +18,7 @@
         </div>
     </header>
 
-    <div class="form-page" style="max-width:700px">
+    <div class="form-page form-page--cadastro">
         <div class="form-card">
             <div class="form-card-header">
                 <div class="form-card-titulo">Criar conta</div>
@@ -27,7 +28,7 @@
             <div class="form-card-corpo">
 
                 <!-- Tipo (só admin vê) -->
-                <div id="campo-tipo-wrapper" style="display:none" class="campo">
+                <div id="campo-tipo-wrapper" class="campo oculto">
                     <label for="tipo">Tipo de usuário</label>
                     <select id="tipo">
                         <option value="voluntario">Voluntário</option>
@@ -133,7 +134,7 @@
                                     </svg>
                                 </button>
                             </div>
-                            <ul id="requisitos-senha" class="requisitos-senha" style="display:none">
+                            <ul id="requisitos-senha" class="requisitos-senha">
                                 <li data-requisito="tamanho"><span class="requisito-icone">✕</span> Mínimo 8 caracteres
                                 </li>
                                 <li data-requisito="maiuscula"><span class="requisito-icone">✕</span> Uma letra
@@ -169,8 +170,8 @@
             </div>
         </div>
 
-        <p style="text-align:center;margin-top:1rem;font-size:.85rem;color:var(--text-secondary)">
-            Já tem conta? <a href="/login" style="color:var(--accent);font-weight:500;text-decoration:none">Faça
+        <p class="cadastro-rodape-texto">
+            Já tem conta? <a href="/login">Faça
                 login</a>
         </p>
     </div>

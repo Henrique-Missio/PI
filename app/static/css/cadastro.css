@@ -1,0 +1,18 @@
+/* cadastro.css — específico de cadastro.html */
+
+.form-page--cadastro {
+  max-width: 700px;
+}
+
+.cadastro-rodape-texto {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: .85rem;
+  color: var(--text-secondary);
+}
+
+.cadastro-rodape-texto a {
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+}

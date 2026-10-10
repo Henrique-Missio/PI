@@ -36,7 +36,7 @@ def _parse_data(valor):
         return None
 
 
-def gerar_dados_relatorio(data_de=None, data_ate=None, categoria=None, nome=None):
+def gerar_dados_relatorio(data_de=None, data_ate=None, categoria=None, nome=None, marca=None, status=None):
     session = SessionLocal()
     try:
         aparelhos = session.scalars(select(Aparelhos)).all()
@@ -61,21 +61,35 @@ def gerar_dados_relatorio(data_de=None, data_ate=None, categoria=None, nome=None
                 return False
             return True
 
-        filtrado = [i for i in itens if (
+        base = [i for i in itens if (
             (not categoria or i["categoria"] == categoria) and
             (not nome or nome.lower() in (i.get("nome") or "").lower()) and
+            (not marca or marca.lower() in (i.get("marca") or "").lower()) and
             dentro_periodo(i)
         )]
+        # respeita o filtro de status, mas ainda inclui Doado — usado nas métricas
+        # "históricas" (recebidos, distribuição por status), onde o item conta mesmo
+        # já tendo saído do estoque
+        com_doados = [
+            i for i in base if not status or i.get("status") == status]
+        # "Itens do Estoque" / total / categoria nunca incluem Doado — ele já tem
+        # seção própria (histórico de doações)
+        # exclui Doado do estoque, exceto quando o usuário filtrou justamente por "Doado"
+        filtrado = [i for i in com_doados if i.get(
+            "status") != "Doado" or status == "Doado"]
 
         hoje = date.today()
         inicio_mes = hoje.replace(day=1)
 
         total = len(filtrado)
-        recebidos = sum(1 for i in filtrado
+        recebidos = sum(1 for i in com_doados
                         if _parse_data(i.get("data_entrada")) and
                         _parse_data(i.get("data_entrada")) >= inicio_mes)
-        doados = sum(1 for i in filtrado if i.get("status") == "Doado")
-        consertados = sum(1 for i in filtrado
+        # histórico de doações: sempre sobre 'base', ignora filtro de status — fica visível
+        # mesmo filtrando por outro status
+        historico_doacoes = [i for i in base if i.get("status") == "Doado"]
+        doados = len(historico_doacoes)
+        consertados = sum(1 for i in com_doados
                           if i.get("status") == "Funcional" and
                           _parse_data(i.get("data_entrada")) and
                           _parse_data(i.get("data_entrada")) >= inicio_mes)
@@ -85,26 +99,43 @@ def gerar_dados_relatorio(data_de=None, data_ate=None, categoria=None, nome=None
             s = i.get("status") or "—"
             status_count[s] = status_count.get(s, 0) + 1
 
-        por_mes = {}
+        categoria_count = {}
         for i in filtrado:
+            c = "Aparelho" if i.get("categoria") == "aparelho" else "Peça"
+            categoria_count[c] = categoria_count.get(c, 0) + 1
+
+        por_mes = {}
+        for i in com_doados:
             entrada = _parse_data(i.get("data_entrada"))
             if entrada:
                 chave = entrada.strftime("%Y-%m")
                 por_mes[chave] = por_mes.get(chave, 0) + 1
+        
+        por_mes_doacoes = {}
+        for i in historico_doacoes:
+            saida = _parse_data(i.get("data_saida"))
+            if saida:
+                chave = saida.strftime("%Y-%m")
+                por_mes_doacoes[chave] = por_mes_doacoes.get(chave, 0) + 1
 
         return {
-            "gerado_em":       hoje.strftime("%d/%m/%Y"),
-            "periodo_de":      data_de or "—",
-            "periodo_ate":     data_ate or "—",
-            "categoria":       categoria or "Todos",
-            "nome_filtro":     nome or "—",
-            "total":           total,
-            "recebidos_mes":   recebidos,
-            "doados":          doados,
-            "consertados_mes": consertados,
-            "status_count":    status_count,
-            "por_mes":         dict(sorted(por_mes.items())),
-            "itens":           filtrado,
+            "gerado_em":         hoje.strftime("%d/%m/%Y"),
+            "periodo_de":        data_de or "—",
+            "periodo_ate":       data_ate or "—",
+            "categoria":         categoria or "Todos",
+            "nome_filtro":       nome or "—",
+            "marca_filtro":      marca or "—",
+            "status_filtro":     status or "Todos",
+            "total":             total,
+            "recebidos_mes":     recebidos,
+            "doados":            doados,
+            "consertados_mes":   consertados,
+            "status_count":      status_count,
+            "categoria_count":   categoria_count,
+            "por_mes":           dict(sorted(por_mes.items())),
+            "por_mes_doacoes":   dict(sorted(por_mes_doacoes.items())),
+            "itens":             filtrado,
+            "historico_doacoes": historico_doacoes,
         }
     finally:
         session.close()
@@ -178,7 +209,8 @@ def gerar_pdf(dados):
     # ── Filtros ──
     story.append(Paragraph(
         f"Período: {dados['periodo_de']} a {dados['periodo_ate']}  |  "
-        f"Categoria: {dados['categoria']}  |  Nome: {dados['nome_filtro']}",
+        f"Categoria: {dados['categoria']}  |  Status: {dados['status_filtro']}  |  "
+        f"Marca: {dados['marca_filtro']}  |  Nome: {dados['nome_filtro']}",
         normal_style
     ))
     story.append(HRFlowable(width="100%", thickness=1,
@@ -231,6 +263,31 @@ def gerar_pdf(dados):
     else:
         story.append(
             Paragraph("Nenhum dado de status para o período selecionado.", normal_style))
+    story.append(Spacer(1, 16))
+    
+    # ── Distribuição por Categoria ──
+    story.append(Paragraph("Distribuição por Categoria", secao_style))
+    if dados["categoria_count"]:
+        rows = [["Categoria", "Quantidade"]]
+        for c, q in dados["categoria_count"].items():
+            rows.append([c, str(q)])
+        t = Table(rows, colWidths=[W * 0.75, W * 0.25])
+        t.setStyle(TableStyle([
+            ("BACKGROUND",     (0, 0), (-1, 0), DARK),
+            ("TEXTCOLOR",      (0, 0), (-1, 0), WHITE),
+            ("FONTNAME",       (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE",       (0, 0), (-1, -1), 9),
+            ("ALIGN",          (1, 0), (1, -1), "CENTER"),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, LIGHT]),
+            ("GRID",           (0, 0), (-1, -1), 0.5, colors.HexColor("#E2E8F0")),
+            ("TOPPADDING",     (0, 0), (-1, -1), 8),
+            ("BOTTOMPADDING",  (0, 0), (-1, -1), 8),
+            ("LEFTPADDING",    (0, 0), (-1, -1), 12),
+        ]))
+        story.append(t)
+    else:
+        story.append(Paragraph(
+            "Nenhum dado de categoria para o período selecionado.", normal_style))
     story.append(Spacer(1, 16))
 
     # ── Recebimentos por mês ──
@@ -295,6 +352,38 @@ def gerar_pdf(dados):
         story.append(
             Paragraph("Nenhum item encontrado com os filtros aplicados.", normal_style))
 
+        # ── Histórico de Doações ──
+    story.append(Paragraph("Histórico de Doações", secao_style))
+    if dados["historico_doacoes"]:
+        rows = [["Nome", "Marca", "Categoria", "Entrada", "Saída"]]
+        for i in dados["historico_doacoes"]:
+            entrada = _parse_data(i.get("data_entrada"))
+            saida = _parse_data(i.get("data_saida"))
+            rows.append([
+                i.get("nome") or "—",
+                i.get("marca") or "—",
+                "Aparelho" if i.get("categoria") == "aparelho" else "Peça",
+                entrada.strftime("%d/%m/%Y") if entrada else "—",
+                saida.strftime("%d/%m/%Y") if saida else "—",
+            ])
+        t = Table(rows, colWidths=[W*0.28, W*0.2, W*0.16, W*0.18, W*0.18])
+        t.setStyle(TableStyle([
+            ("BACKGROUND",     (0, 0), (-1, 0), DARK),
+            ("TEXTCOLOR",      (0, 0), (-1, 0), WHITE),
+            ("FONTNAME",       (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE",       (0, 0), (-1, -1), 8),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, LIGHT]),
+            ("GRID",           (0, 0), (-1, -1), 0.5, colors.HexColor("#E2E8F0")),
+            ("TOPPADDING",     (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING",  (0, 0), (-1, -1), 6),
+            ("LEFTPADDING",    (0, 0), (-1, -1), 8),
+        ]))
+        story.append(t)
+    else:
+        story.append(
+            Paragraph("Nenhuma doação registrada no período selecionado.", normal_style))
+    story.append(Spacer(1, 16))
+    
     # ── Rodapé ──
     story.append(Spacer(1, 20))
     story.append(HRFlowable(width="100%", thickness=1, color=LIGHT))

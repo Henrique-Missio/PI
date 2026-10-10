@@ -5,7 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pids Tech — Estoque</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estoque.css') }}" />
 </head>
 
 <body>
@@ -18,7 +19,7 @@
   <div class="page-wrapper">
     <div class="page-topbar">
       <h1 class="page-title">Estoque</h1>
-      <div class="page-actions" id="acoes-admin" style="display:none">
+      <div class="page-actions oculto" id="acoes-admin">
         <a href="/cadastrar-aparelho" class="btn btn-secondary-dark">+ Aparelho</a>
         <a href="/cadastrar-peca" class="btn btn-primary">+ Peça</a>
       </div>

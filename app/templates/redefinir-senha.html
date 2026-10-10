@@ -5,7 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pids Tech — Redefinir Senha</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/redefinir-senha.css') }}" />
 </head>
 
 <body>
@@ -30,7 +31,7 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
                     </div>
-                    <ul id="requisitos-senha" class="requisitos-senha" style="display:none">
+                    <ul id="requisitos-senha" class="requisitos-senha">
                         <li data-requisito="tamanho"><span class="requisito-icone">✕</span> Mínimo 8 caracteres</li>
                         <li data-requisito="maiuscula"><span class="requisito-icone">✕</span> Uma letra maiúscula</li>
                         <li data-requisito="numero"><span class="requisito-icone">✕</span> Um número</li>

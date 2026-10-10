@@ -5,7 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pids Tech — Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
 </head>
 
 <body>
@@ -33,11 +34,10 @@
                     <label for="senha">Senha</label>
                     <input type="password" id="senha" autocomplete="current-password" />
                 </div>
-                <a href="/recuperar-senha" style="font-size:.8rem;color:var(--accent);text-decoration:none">Esqueci minha
+                <a href="/recuperar-senha" class="login-link-recuperar">Esqueci minha
                     senha</a>
 
-                <button id="botao-login" class="btn btn-primary"
-                    style="width:100%;justify-content:center;padding:.65rem">
+                <button id="botao-login" class="btn btn-primary login-botao-entrar">
                     Entrar
                 </button>
             </div>

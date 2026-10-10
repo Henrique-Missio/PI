@@ -1,0 +1,227 @@
+/* estoque.css — específico de index.html (Estoque) */
+
+/* ── Barra de topo da página ── */
+.page-topbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.page-actions {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.page-actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+/* ── Tabela ── */
+.tabela-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.tabela-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .9rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  gap: 1rem;
+}
+
+.tabela-info {
+  font-size: .85rem;
+  color: var(--text-secondary);
+}
+
+.tabela-info strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.tabela-wrapper {
+  overflow-x: auto;
+}
+
+/* Tabela compacta no mobile: mostra só Cód./Categoria/Nome (3 primeiras
+   colunas). Marca/Status/Data entrada/Data saída/Ações ficam escondidas
+   e só aparecem no popup (clique na linha já abre o modal completo). */
+.tabela-card table {
+  table-layout: fixed;
+}
+  
+.tabela-card th:nth-child(n+4),
+.tabela-card td:nth-child(n+4) {
+  display: none;
+}
+.tabela-card th.th-acoes,
+.tabela-card td.td-acoes {
+  display: table-cell !important;
+}
+.tabela-card th:not(.th-acoes),
+.tabela-card td:not(.td-acoes) {
+  width: calc((100% - 90px) / 3);
+}
+  
+@media (min-width: 481px) {
+  .tabela-card th:nth-child(4),
+  .tabela-card td:nth-child(4) {
+    display: table-cell;
+  }
+  
+  .tabela-card th:not(.th-acoes),
+  .tabela-card td:not(.td-acoes) {
+    width: calc((100% - 90px) / 4);
+  }
+}
+  
+@media (min-width: 640px) {
+
+  .tabela-card th:nth-child(5),
+  .tabela-card td:nth-child(5) {
+    display: table-cell;
+  }
+  
+  .tabela-card th:not(.th-acoes),
+  .tabela-card td:not(.td-acoes) {
+    width: calc((100% - 90px) / 5);
+  }
+}
+  
+@media (min-width: 900px) {
+  
+  .tabela-card th:nth-child(6),
+  .tabela-card td:nth-child(6) {
+    display: table-cell;
+  }
+  
+  .tabela-card th:not(.th-acoes),
+  .tabela-card td:not(.td-acoes) {
+    width: calc((100% - 90px) / 6);
+  }
+}
+  
+@media (min-width: 1200px) {
+  
+  .tabela-card th:nth-child(7),
+  .tabela-card td:nth-child(7),
+  .tabela-card th:nth-child(8),
+  .tabela-card td:nth-child(8) {
+    display: table-cell;
+  }
+  
+  .tabela-card th:not(.th-acoes),
+  .tabela-card td:not(.td-acoes) {
+    width: calc((100% - 100px) / 7);
+  }
+  
+  .tabela-card .th-acoes,
+  .tabela-card .td-acoes {
+    width: 90px;
+  } }
+
+/* Código de identificação do item (ex: AP-0007) */
+.td-codigo {
+  font-family: 'Space Grotesk', monospace;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+
+/* Coluna de ações (editar/excluir) na tabela de estoque */
+.th-acoes {
+  width: 90px;
+  min-width: 90px;
+}
+
+.td-acoes {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Grupo de botões de ação na linha, sempre visíveis (não só no hover),
+   usando o mesmo estilo dos botões do rodapé do modal — só que compactos. */
+.acoes-linha {
+  display: inline-flex;
+  gap: .4rem;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.btn-icone {
+  padding: .35rem .55rem;
+  line-height: 1;
+  font-size: .9rem;
+}
+
+/* Usado no aviso de login expirado dentro do modal de detalhes (app.js) */
+.aviso-login {
+  color: var(--danger);
+  font-size: .82rem;
+  margin-top: .5rem;
+}
+
+/* ── Responsivo (mobile-first) ── */
+@media (min-width: 400px) {
+  .page-topbar {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .page-actions {
+    width: auto;
+  }
+
+  .page-actions .btn {
+    flex: none;
+    justify-content: flex-start;
+  }
+}
+
+/* Ajustes pra coluna de ações sempre visível não espremer/quebrar linha */
+.tabela-card th.th-acoes,
+.tabela-card td.td-acoes {
+  padding-left: .4rem;
+  padding-right: .4rem;
+}
+
+.acoes-linha .btn-icone {
+  flex-shrink: 0;
+}
+
+/* Corte limpo (reticências) em vez de vazamento/sobreposição visual
+   nas colunas apertadas em telas pequenas */
+.tabela-card td:not(.td-acoes):not(:nth-child(2)),:not(:nth-child()),
+.tabela-card th:not(.th-acoes):not(:nth-child(2)):not(:nth-child(5)) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tabela-card td:nth-child(2),
+.tabela-card th:nth-child(2),
+.tabela-card td:nth-child(5),
+.tabela-card td:nth-child(5) {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;  }

@@ -5,7 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pids Tech — Meu Perfil</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/perfil.css') }}" />
 </head>
 
 <body>
@@ -79,7 +80,7 @@
                                 </svg>
                             </button>
                         </div>
-                        <ul id="requisitos-nova-senha" class="requisitos-senha" style="display:none">
+                        <ul id="requisitos-nova-senha" class="requisitos-senha">
                             <li data-requisito="tamanho"><span class="requisito-icone">✕</span> Mínimo 8 caracteres</li>
                             <li data-requisito="maiuscula"><span class="requisito-icone">✕</span> Uma letra maiúscula
                             </li>
@@ -93,7 +94,7 @@
 
             <div class="form-rodape">
                 <span id="mensagem-perfil" class="mensagem"></span>
-                <div style="display:flex;gap:.5rem">
+                <div class="grupo-botoes">
                     <button id="botao-excluir-conta" class="btn btn-danger btn-sm">Excluir conta</button>
                     <button id="botao-salvar-perfil" class="btn btn-primary">Salvar alterações</button>
                 </div>

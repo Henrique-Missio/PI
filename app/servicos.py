@@ -303,9 +303,17 @@ def editar_aparelho(aparelho_id, dados):
         if "marca"       in dados: aparelho.marca       = _texto_obrigatorio(dados["marca"],       "marca", max_len=40)
         if "informacoes" in dados: aparelho.informacoes = _texto_obrigatorio(dados["informacoes"], "informacoes", max_len=1500)
         if "problema"    in dados: aparelho.problema    = _texto_obrigatorio(dados["problema"],    "problema", max_len=500)
-        if "status"      in dados: aparelho.status      = _texto_obrigatorio(dados["status"],      "status", max_len=30)
-        if "data_entrada"in dados: aparelho.data_entrada= _converter_data(dados["data_entrada"],   "data_entrada")
-        if "data_saida"  in dados: aparelho.data_saida  = _converter_data(dados["data_saida"],     "data_saida") if dados["data_saida"] else None
+        if "status" in dados:
+            aparelho.status = _texto_obrigatorio(
+                dados["status"],      "status", max_len=30)
+        if aparelho.status == "Doado" and "data_saida" not in dados:
+            aparelho.data_saida = date.today()
+        if "data_entrada" in dados:
+            aparelho.data_entrada = _converter_data(
+                dados["data_entrada"],   "data_entrada")
+        if "data_saida" in dados:
+            aparelho.data_saida = _converter_data(
+                dados["data_saida"],     "data_saida") if dados["data_saida"] else None
 
         _validar_datas_estoque(aparelho.data_entrada, aparelho.data_saida)
 
@@ -404,9 +412,17 @@ def editar_peca(peca_id, dados):
         if "marca"       in dados: peca.marca       = _texto_obrigatorio(dados["marca"],       "marca", max_len=40)
         if "informacoes" in dados: peca.informacoes = _texto_obrigatorio(dados["informacoes"], "informacoes", max_len=1500)
         if "problema"    in dados: peca.problema    = _texto_opcional(dados["problema"], max_len=500)
-        if "status"      in dados: peca.status      = _texto_obrigatorio(dados["status"],      "status", max_len=30)
-        if "data_entrada"in dados: peca.data_entrada= _converter_data(dados["data_entrada"],   "data_entrada")
-        if "data_saida"  in dados: peca.data_saida  = _converter_data(dados["data_saida"],     "data_saida") if dados["data_saida"] else None
+        if "status" in dados:
+            peca.status = _texto_obrigatorio(
+                dados["status"],      "status", max_len=30)
+        if peca.status == "Doado" and "data_saida" not in dados:
+            peca.data_saida = date.today()
+        if "data_entrada" in dados:
+            peca.data_entrada = _converter_data(
+                dados["data_entrada"],   "data_entrada")
+        if "data_saida" in dados:
+            peca.data_saida = _converter_data(
+                dados["data_saida"],     "data_saida") if dados["data_saida"] else None
 
         _validar_datas_estoque(peca.data_entrada, peca.data_saida)
 

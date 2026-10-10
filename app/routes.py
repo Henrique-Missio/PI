@@ -323,6 +323,8 @@ def rota_relatorio_dados():
         data_ate=args.get("data_ate"),
         categoria=args.get("categoria") or None,
         nome=args.get("nome") or None,
+        marca=args.get("marca") or None,
+        status=args.get("status") or None,
     )
     return fk.jsonify(dados)
 
@@ -338,6 +340,8 @@ def rota_relatorio_pdf():
         data_ate=args.get("data_ate"),
         categoria=args.get("categoria") or None,
         nome=args.get("nome") or None,
+        marca=args.get("marca") or None,
+        status=args.get("status") or None,
     )
     pdf_bytes = gerar_pdf(dados)
     return fk.Response(

@@ -1,0 +1,20 @@
+/* perfil.css — específico de perfil.html */
+
+/* ── Perfil ── */
+.perfil-grid {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+
+.perfil-grid .form-card {
+  width: 100%;
+  max-width: 580px;
+}
+
+/* ── Responsivo (mobile-first) ── */
+@media (min-width: 769px) {
+  .perfil-grid {
+    grid-template-columns: 1fr;
+  }
+}

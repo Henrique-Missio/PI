@@ -430,7 +430,7 @@ function renderizarAuth() {
     area.appendChild(wrapper);
 
     // botões de cadastro só para logados
-    document.getElementById("acoes-admin").style.display = "flex";
+    document.getElementById("acoes-admin").classList.remove("oculto");
   } else {
     const btnLogin = document.createElement("a");
     btnLogin.href = "/login";

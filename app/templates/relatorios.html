@@ -5,7 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pids Tech — Relatórios</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/relatorios.css') }}" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 
@@ -21,62 +22,82 @@
     <div class="page-wrapper">
 
         <!-- Filtros -->
-        <div class="filtros-card" style="margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-
-            <div class="filtro-grupo">
-                <label class="filtro-label">Período</label>
-                <select id="f-periodo" class="filtro-input">
+        <div class="filtros-card relatorios-filtros">
+        
+            <div class="filtro-grupo filtro-grupo--select">
+                <label>Período</label>
+                <select id="f-periodo">
                     <option value="7">Última semana</option>
                     <option value="30" selected>1 mês</option>
                     <option value="90">3 meses</option>
+                    <option value="365">1 ano</option>
+                    <option value="all">Todo o período</option>
                     <option value="custom">Personalizado</option>
                 </select>
             </div>
-
-            <div id="grupo-custom" style="display:none; flex-direction: row; align-items: flex-end; gap: .5rem;">
-                <div class="filtro-grupo" style="min-width:130px; flex:none;">
-                    <label class="filtro-label">De</label>
-                    <input type="date" id="f-data-de" class="filtro-input" />
-                </div>
-                <div class="filtro-grupo" style="min-width:130px; flex:none;">
-                    <label class="filtro-label">Até</label>
-                    <input type="date" id="f-data-ate" class="filtro-input" />
-                </div>
-            </div>
-
-            <div class="filtro-grupo">
-                <label class="filtro-label">Categoria</label>
-                <select id="f-categoria" class="filtro-input">
+        
+            <div class="filtro-grupo filtro-grupo--select">
+                <label>Categoria</label>
+                <select id="f-categoria">
                     <option value="">Todos</option>
                     <option value="aparelho">Aparelho</option>
                     <option value="peca">Peça</option>
                 </select>
             </div>
-
-            <div class="filtro-grupo">
-                <label class="filtro-label">Nome</label>
-                <input type="text" id="f-nome" class="filtro-input" placeholder="Ex: notebook, placa..." />
+        
+            <div class="filtro-grupo filtro-grupo--select">
+                <label>Status</label>
+                <select id="f-status">
+                    <option value="">Todos</option>
+                    <option value="Funcional">Funcional</option>
+                    <option value="Não funcional">Não funcional</option>
+                    <option value="Em conserto">Em conserto</option>
+                    <option value="Reservado">Reservado</option>
+                    <option value="Doado">Doado</option>
+                </select>
             </div>
-
-            <div style="display:flex; align-items:flex-end; gap:.5rem; flex-shrink:0;">
+        
+            <div id="grupo-custom" class="filtro-grupo-custom">
+                <div class="filtro-grupo filtro-grupo--compacto">
+                    <label>De</label>
+                    <input type="date" id="f-data-de" />
+                </div>
+                <div class="filtro-grupo filtro-grupo--compacto">
+                    <label>Até</label>
+                    <input type="date" id="f-data-ate" />
+                </div>
+            </div>
+        
+            <div class="filtro-grupo filtro-grupo--texto">
+                <label>Nome</label>
+                <input type="text" id="f-nome" placeholder="Ex: notebook, placa..." />
+            </div>
+        
+            <div class="filtro-grupo filtro-grupo--texto">
+                <label>Marca</label>
+                <input type="text" id="f-marca" placeholder="Ex: Samsung, Dell..." />
+            </div>
+        
+            <div class="relatorios-acoes-filtro">
+                <button id="btn-reset" class="btn btn-secondary-dark">Limpar filtros</button>
                 <button id="btn-gerar" class="btn btn-primary">Gerar</button>
                 <button id="btn-baixar" class="btn btn-secondary-dark" disabled>⬇ Baixar PDF</button>
             </div>
-
+        
         </div>
 
         <!-- Cards de resumo -->
-        <div class="relatorio-cards" id="relatorio-cards" style="display:none;">
+        <div class="relatorio-cards oculto" id="relatorio-cards">
             <div class="relatorio-card">
                 <div class="relatorio-card-label">Total no estoque</div>
                 <div class="relatorio-card-valor" id="card-total">—</div>
             </div>
             <div class="relatorio-card relatorio-card-teal">
-                <div class="relatorio-card-label">Recebidos no mês</div>
+                <div class="relatorio-card-label">Recebidos</div>
                 <div class="relatorio-card-valor" id="card-recebidos">—</div>
             </div>
             <div class="relatorio-card relatorio-card-blue">
-                <div class="relatorio-card-label">Consertados no mês</div>
+                <div class="relatorio-card-label">Consertados</div>
                 <div class="relatorio-card-valor" id="card-consertados">—</div>
             </div>
             <div class="relatorio-card relatorio-card-green">
@@ -86,37 +107,43 @@
         </div>
 
         <!-- Seletor de gráfico + canvas -->
-        <div class="form-card" id="area-grafico" style="display:none; margin-bottom: 1.5rem;">
-            <div class="form-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem;">
+        <div class="form-card relatorios-area-grafico oculto" id="area-grafico">
+            <div class="form-card-header form-card-header--acoes">
                 <div>
                     <div class="form-card-titulo">Visualização</div>
                     <div class="form-card-subtitulo">Dados filtrados do estoque</div>
                 </div>
-                <div style="display:flex; gap:.5rem;">
+                <div class="grupo-botoes">
                     <button class="btn btn-secondary btn-sm grafico-tab ativo" data-tipo="barras">Por status</button>
                     <button class="btn btn-secondary btn-sm grafico-tab" data-tipo="linha">Por mês</button>
+                    <button class="btn btn-secondary btn-sm grafico-tab" data-tipo="categoria">Por categoria</button>
+                    <button class="btn btn-secondary btn-sm grafico-tab" data-tipo="doacoes">Doações</button>
+                    <button class="btn btn-secondary btn-sm grafico-tab" data-tipo="proporcao">Estoque x Doado</button>
                 </div>
             </div>
-            <div class="form-card-corpo" style="padding: 1.5rem;">
-                <canvas id="grafico-principal" height="120"></canvas>
+            <div class="form-card-corpo">
+                <div class="grafico-wrap">
+                    <canvas id="grafico-principal"></canvas>
+                </div>      
             </div>
         </div>
 
         <!-- Tabela de itens -->
-        <div class="form-card" id="area-tabela" style="display:none;">
+        <div class="form-card oculto" id="area-tabela">
             <div class="form-card-header">
                 <div class="form-card-titulo">Itens encontrados</div>
                 <div class="form-card-subtitulo" id="label-contagem">—</div>
             </div>
-            <div class="form-card-corpo" style="overflow-x:auto;">
-                <table class="tabela" style="width:100%;">
+            <div class="form-card-corpo relatorios-tabela-wrap">
+                <table>
                     <thead>
                         <tr>
+                            <th>Cód.</th>
                             <th>Nome</th>
-                            <th>Marca</th>
                             <th>Categoria</th>
-                            <th>Status</th>
-                            <th>Entrada</th>
+                            <th class="col-marca">Marca</th>
+                            <th class="col-status">Status</th>
+                            <th class="col-entrada">Entrada</th>
                         </tr>
                     </thead>
                     <tbody id="tabela-itens"></tbody>
@@ -124,7 +151,7 @@
             </div>
         </div>
 
-        <div id="relatorio-vazio" style="display:none;" class="td-vazio" style="padding:3rem; text-align:center;">
+        <div id="relatorio-vazio" class="td-vazio oculto">
             Nenhum item encontrado com os filtros selecionados.
         </div>
 

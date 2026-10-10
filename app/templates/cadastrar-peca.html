@@ -5,7 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pids Tech — Cadastrar Peça</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cadastrar-peca.css') }}" />
 </head>
 
 <body>
@@ -71,7 +72,7 @@
 
             <div class="form-rodape">
                 <span id="mensagem-peca" class="mensagem"></span>
-                <div style="display:flex;gap:.5rem">
+                <div class="grupo-botoes">
                     <a href="/" class="btn btn-ghost">Cancelar</a>
                     <button id="btn-cadastrar" class="btn btn-primary">Cadastrar peça</button>
                 </div>
